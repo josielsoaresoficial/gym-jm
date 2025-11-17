@@ -158,19 +158,13 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           // Verifica se precisa confirmar email
           if (data?.user?.identities?.length === 0) {
             toast.error("Este email já está em uso. Tente fazer login.");
-          } else if (data?.user && !data?.session) {
-            toast.success(
-              "Conta criada com sucesso! Verifique seu email para confirmar e depois faça login.",
-              { duration: 6000 }
-            );
           } else {
             toast.success("Conta criada com sucesso! Redirecionando...");
             onOpenChange(false);
+            setEmail("");
+            setPassword("");
             navigate("/onboarding");
           }
-          setEmail("");
-          setPassword("");
-          setIsLogin(true); // Volta para tela de login
         }
       }
     } catch (error) {
