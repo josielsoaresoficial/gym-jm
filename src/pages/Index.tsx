@@ -90,7 +90,7 @@ const Index = () => {
                 variant="hero" 
                 size="lg" 
                 className="w-full sm:w-auto"
-                onClick={() => handleProtectedAction("/dashboard")}
+                onClick={() => setAuthDialogOpen(true)}
               >
                 <Zap className="w-5 h-5" />
                 Começar Agora
