@@ -279,16 +279,47 @@ Retorne APENAS um JSON válido no seguinte formato:
 
     const aiResponse = await response.json();
     console.log("Resposta do Google Gemini recebida");
+    console.log("Estrutura da resposta:", JSON.stringify(aiResponse).substring(0, 500));
 
     // Extrair conteúdo da resposta (formato Google Gemini)
-    const aiContent = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!aiContent) {
-      console.error("Resposta da IA vazia");
+    const candidate = aiResponse.candidates?.[0];
+    if (!candidate) {
+      console.error("Nenhum candidato na resposta:", JSON.stringify(aiResponse));
       return new Response(
-        JSON.stringify({ error: "Não foi possível analisar a imagem" }),
+        JSON.stringify({ 
+          error: "Resposta inválida da API",
+          details: "Nenhum candidato retornado pelo modelo"
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Verificar se o conteúdo foi bloqueado por segurança
+    if (candidate.finishReason === "SAFETY") {
+      console.error("Conteúdo bloqueado por filtros de segurança:", JSON.stringify(candidate.safetyRatings));
+      return new Response(
+        JSON.stringify({ 
+          error: "Imagem bloqueada por filtros de segurança",
+          message: "A imagem foi bloqueada pelos filtros de segurança da API. Por favor, tente com outra imagem de alimento."
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const aiContent = candidate.content?.parts?.[0]?.text;
+    if (!aiContent) {
+      console.error("Conteúdo vazio. Candidato completo:", JSON.stringify(candidate));
+      console.error("Finish reason:", candidate.finishReason);
+      return new Response(
+        JSON.stringify({ 
+          error: "Não foi possível analisar a imagem",
+          details: `Conteúdo de resposta vazio. Motivo: ${candidate.finishReason || "desconhecido"}`
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Conteúdo extraído com sucesso");
 
     // Parse do JSON retornado pela IA
     let aiResult;
