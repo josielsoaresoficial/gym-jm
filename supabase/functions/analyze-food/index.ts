@@ -170,33 +170,21 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY não configurada");
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!GOOGLE_AI_API_KEY) {
+      console.error("GOOGLE_AI_API_KEY não configurada");
       return new Response(
         JSON.stringify({ error: "Configuração de IA não disponível" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Iniciando análise de imagem com IA...");
+    console.log("Iniciando análise de imagem com Google Gemini...");
 
     // Preparar imagem para a API (remover prefixo data:image se presente)
     const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, "");
 
-    // Chamar Lovable AI com Gemini Vision para análise de alimentos
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro", // Modelo mais preciso para visão
-        messages: [
-          {
-            role: "system",
-            content: `Você é um especialista em nutrição e identificação de alimentos. Analise a imagem fornecida seguindo estas diretrizes:
+    const systemPrompt = `Você é um especialista em nutrição e identificação de alimentos. Analise a imagem fornecida seguindo estas diretrizes:
 
 IDENTIFICAÇÃO DE ALIMENTOS:
 - Liste TODOS os alimentos visíveis, mesmo os parcialmente ocultos ou em pequenas quantidades
@@ -231,49 +219,49 @@ Retorne APENAS um JSON válido no seguinte formato:
   "totalCarbs": 0,
   "totalFat": 0,
   "notes": "Descrição detalhada da refeição identificada, incluindo: composição visual, confiança da análise, possíveis alergênicos detectados, qualidade da imagem, e observações nutricionais relevantes."
-}`
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Analise esta imagem e identifique todos os alimentos presentes com suas informações nutricionais."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+}`;
+
+    // Chamar Google Gemini API diretamente
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: systemPrompt },
+                { text: "Analise esta imagem e identifique todos os alimentos presentes com suas informações nutricionais." },
+                {
+                  inline_data: {
+                    mime_type: "image/jpeg",
+                    data: base64Image
+                  }
                 }
-              }
-            ]
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 2048,
           }
-        ],
-        temperature: 0.3, // Baixa temperatura para respostas mais determinísticas
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Erro na API de IA:", response.status, errorText);
-      
-      // Tratamento específico para créditos insuficientes
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Créditos insuficientes para análise de IA",
-            message: "Você não possui créditos suficientes em sua conta Lovable para usar a análise de alimentos com IA. Por favor, recarregue seus créditos ou aguarde a renovação mensal."
-          }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      console.error("Erro na API do Google Gemini:", response.status, errorText);
       
       // Tratamento para limite de requisições
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ 
             error: "Limite de requisições excedido",
-            message: "Você atingiu o limite de requisições. Tente novamente em alguns instantes."
+            message: "Você atingiu o limite de requisições da API do Google. Tente novamente em alguns instantes."
           }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -283,17 +271,17 @@ Retorne APENAS um JSON válido no seguinte formato:
       return new Response(
         JSON.stringify({ 
           error: "Erro ao analisar imagem com IA",
-          message: `Erro ${response.status}: Não foi possível processar a análise da imagem. Tente novamente.`
+          message: `Erro ${response.status}: Não foi possível processar a análise da imagem. Verifique sua chave de API do Google.`
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const aiResponse = await response.json();
-    console.log("Resposta da IA recebida");
+    console.log("Resposta do Google Gemini recebida");
 
-    // Extrair conteúdo da resposta
-    const aiContent = aiResponse.choices?.[0]?.message?.content;
+    // Extrair conteúdo da resposta (formato Google Gemini)
+    const aiContent = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!aiContent) {
       console.error("Resposta da IA vazia");
       return new Response(
