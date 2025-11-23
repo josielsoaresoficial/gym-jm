@@ -1,32 +1,47 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-interface EmailRequest {
-  email: string;
-  confirmationUrl: string;
-  token: string;
-}
+const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
 
 const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
   try {
-    const { email, confirmationUrl, token }: EmailRequest = await req.json();
+    const payload = await req.text();
+    const headers = Object.fromEntries(req.headers);
+    
+    // Validar webhook do Supabase
+    const wh = new Webhook(hookSecret);
+    const {
+      user,
+      email_data: { token, token_hash, redirect_to, email_action_type },
+    } = wh.verify(payload, headers) as {
+      user: {
+        email: string;
+      };
+      email_data: {
+        token: string;
+        token_hash: string;
+        redirect_to: string;
+        email_action_type: string;
+        site_url: string;
+      };
+    };
 
-    console.log("Enviando email de confirmação para:", email);
+    console.log("Webhook validado. Enviando email para:", user.email);
 
+    // Construir URL de confirmação
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
+
+    // Enviar email de confirmação
     const emailResponse = await resend.emails.send({
       from: "nPnG JM <onboarding@resend.dev>",
-      to: [email],
+      to: [user.email],
       subject: "Confirme seu cadastro - nPnG JM",
       html: `
         <!DOCTYPE html>
@@ -85,18 +100,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
     console.error("Erro ao enviar email:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: {
+          http_code: error.code,
+          message: error.message 
+        }
+      }),
       {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        status: 401,
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
