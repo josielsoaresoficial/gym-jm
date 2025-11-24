@@ -53,6 +53,7 @@ export const FoodPhotoAnalyzer = () => {
   const [editingFood, setEditingFood] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedGrams, setEditedGrams] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -364,7 +365,7 @@ export const FoodPhotoAnalyzer = () => {
                 </div>
               </div>
 
-              <Button onClick={saveToDatabase} className="w-full" size="lg">
+              <Button onClick={() => setShowConfirmDialog(true)} className="w-full" size="lg">
                 Salvar Refeição
               </Button>
             </div>
@@ -407,6 +408,58 @@ export const FoodPhotoAnalyzer = () => {
             </Button>
             <Button onClick={handleSaveEdit}>
               Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Gramaturas dos Alimentos</DialogTitle>
+          </DialogHeader>
+          {analysisResult && (
+            <div className="py-4">
+              <div className="bg-primary/10 rounded-lg p-4">
+                <h4 className="font-semibold mb-3">Total da Refeição</h4>
+                <div className="grid grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-primary">
+                      {Math.round(analysisResult.analise.total_refeicao.calories)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">kcal</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">
+                      {Math.round(analysisResult.analise.total_refeicao.protein)}g
+                    </p>
+                    <p className="text-xs text-muted-foreground">Proteína</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">
+                      {Math.round(analysisResult.analise.total_refeicao.carbs)}g
+                    </p>
+                    <p className="text-xs text-muted-foreground">Carbs</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">
+                      {Math.round(analysisResult.analise.total_refeicao.fat)}g
+                    </p>
+                    <p className="text-xs text-muted-foreground">Gordura</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={() => {
+              setShowConfirmDialog(false);
+              saveToDatabase();
+            }}>
+              Salvar Alterações
             </Button>
           </div>
         </DialogContent>
