@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercise_library: {
+        Row: {
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          duration: string | null
+          equipment: Json | null
+          gif_url: string | null
+          id: string
+          instructions: Json | null
+          muscle_group: string
+          name: string
+          reps: string | null
+          rest_time: number | null
+          sets: number | null
+          tips: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration?: string | null
+          equipment?: Json | null
+          gif_url?: string | null
+          id?: string
+          instructions?: Json | null
+          muscle_group: string
+          name: string
+          reps?: string | null
+          rest_time?: number | null
+          sets?: number | null
+          tips?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration?: string | null
+          equipment?: Json | null
+          gif_url?: string | null
+          id?: string
+          instructions?: Json | null
+          muscle_group?: string
+          name?: string
+          reps?: string | null
+          rest_time?: number | null
+          sets?: number | null
+          tips?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorite_recipes: {
         Row: {
           category: string | null
