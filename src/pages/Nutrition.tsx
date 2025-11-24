@@ -670,23 +670,71 @@ const Nutrition = () => {
                           <ul className="space-y-4 mb-6">
                             {meal.foods.map((food: any, index: number) => (
                               <li key={index}>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-orange-500 mt-1 text-base">•</span>
-                                  <div className="flex-1">
-                                    <div className="text-sm">
-                                      <span className="font-normal">
-                                        {food.name} ({food.portionGrams || food.portion}g)
-                                      </span>
-                                      <span className="ml-2">- {food.calories} kcal</span>
-                                      {food.isEstimated && (
-                                        <span className="ml-2 text-muted-foreground">(estimado)</span>
+                                <div className="border rounded-lg p-3 bg-muted/30">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <span className="font-semibold text-base">
+                                          {food.name}
+                                        </span>
+                                        {food.confidence && (
+                                          <Badge 
+                                            variant="outline" 
+                                            className={`text-xs ${
+                                              food.confidence === 'alta' 
+                                                ? 'bg-green-500/10 text-green-700 border-green-500/20' 
+                                                : food.confidence === 'média'
+                                                ? 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20'
+                                                : 'bg-red-500/10 text-red-700 border-red-500/20'
+                                            }`}
+                                          >
+                                            {food.confidence === 'alta' ? '✓ Alta' : 
+                                             food.confidence === 'média' ? '~ Média' : 
+                                             '? Baixa'} confiança
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="text-sm text-muted-foreground mb-2">
+                                        <span className="font-medium">{food.portionGrams || food.portion}g</span>
+                                        {food.source && (
+                                          <span className="ml-2">• Fonte: {food.source}</span>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-4 gap-3 text-sm">
+                                        <div className="text-center p-2 rounded bg-orange-500/10">
+                                          <div className="font-bold text-orange-600">
+                                            {Math.round(food.calories || 0)}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">kcal</div>
+                                        </div>
+                                        <div className="text-center p-2 rounded bg-blue-500/10">
+                                          <div className="font-bold text-blue-600">
+                                            {Math.round((food.protein || 0) * 10) / 10}g
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">Prot.</div>
+                                        </div>
+                                        <div className="text-center p-2 rounded bg-purple-500/10">
+                                          <div className="font-bold text-purple-600">
+                                            {Math.round((food.carbs || 0) * 10) / 10}g
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">Carbs</div>
+                                        </div>
+                                        <div className="text-center p-2 rounded bg-yellow-500/10">
+                                          <div className="font-bold text-yellow-600">
+                                            {Math.round((food.fat || 0) * 10) / 10}g
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">Gord.</div>
+                                        </div>
+                                      </div>
+                                      
+                                      {food.description && (
+                                        <p className="mt-3 text-sm text-muted-foreground italic leading-relaxed border-t pt-2">
+                                          {food.description}
+                                        </p>
                                       )}
                                     </div>
-                                    {food.description && (
-                                      <p className="mt-2 text-sm text-muted-foreground italic leading-relaxed">
-                                        {food.description}
-                                      </p>
-                                    )}
                                   </div>
                                 </div>
                               </li>
