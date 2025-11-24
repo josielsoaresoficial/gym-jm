@@ -63,16 +63,16 @@ export const useMacroTracking = () => {
 
       const { data: todayMeals } = await supabase
         .from('meals')
-        .select('protein, carbs, fat')
+        .select('total_protein, total_carbs, total_fat')
         .eq('user_id', user?.id)
-        .gte('meal_date', today.toISOString())
-        .lt('meal_date', tomorrow.toISOString());
+        .gte('created_at', today.toISOString())
+        .lt('created_at', tomorrow.toISOString());
 
       const todayTotals = todayMeals?.reduce(
         (acc, meal) => ({
-          protein: acc.protein + (Number(meal.protein) || 0),
-          carbs: acc.carbs + (Number(meal.carbs) || 0),
-          fat: acc.fat + (Number(meal.fat) || 0),
+          protein: acc.protein + (Number(meal.total_protein) || 0),
+          carbs: acc.carbs + (Number(meal.total_carbs) || 0),
+          fat: acc.fat + (Number(meal.total_fat) || 0),
         }),
         { protein: 0, carbs: 0, fat: 0 }
       ) || { protein: 0, carbs: 0, fat: 0 };
@@ -85,16 +85,16 @@ export const useMacroTracking = () => {
 
       const { data: yesterdayMeals } = await supabase
         .from('meals')
-        .select('protein, carbs, fat')
+        .select('total_protein, total_carbs, total_fat')
         .eq('user_id', user?.id)
-        .gte('meal_date', yesterday.toISOString())
-        .lt('meal_date', today.toISOString());
+        .gte('created_at', yesterday.toISOString())
+        .lt('created_at', today.toISOString());
 
       const yesterdayTotals = yesterdayMeals?.reduce(
         (acc, meal) => ({
-          protein: acc.protein + (Number(meal.protein) || 0),
-          carbs: acc.carbs + (Number(meal.carbs) || 0),
-          fat: acc.fat + (Number(meal.fat) || 0),
+          protein: acc.protein + (Number(meal.total_protein) || 0),
+          carbs: acc.carbs + (Number(meal.total_carbs) || 0),
+          fat: acc.fat + (Number(meal.total_fat) || 0),
         }),
         { protein: 0, carbs: 0, fat: 0 }
       ) || { protein: 0, carbs: 0, fat: 0 };
@@ -128,16 +128,16 @@ export const useMacroTracking = () => {
 
         const { data } = await supabase
           .from('meals')
-          .select('protein, carbs, fat')
+          .select('total_protein, total_carbs, total_fat')
           .eq('user_id', user?.id)
-          .gte('meal_date', startDate.toISOString())
-          .lt('meal_date', endDate.toISOString());
+          .gte('created_at', startDate.toISOString())
+          .lt('created_at', endDate.toISOString());
 
         const totals = data?.reduce(
           (acc, meal) => ({
-            protein: acc.protein + (Number(meal.protein) || 0),
-            carbs: acc.carbs + (Number(meal.carbs) || 0),
-            fat: acc.fat + (Number(meal.fat) || 0),
+            protein: acc.protein + (Number(meal.total_protein) || 0),
+            carbs: acc.carbs + (Number(meal.total_carbs) || 0),
+            fat: acc.fat + (Number(meal.total_fat) || 0),
           }),
           { protein: 0, carbs: 0, fat: 0 }
         ) || { protein: 0, carbs: 0, fat: 0 };

@@ -105,23 +105,23 @@ const Progress = () => {
 
       const { data: monthMeals } = await supabase
         .from('meals')
-        .select('calories, protein, meal_date')
+        .select('total_calories, total_protein, created_at')
         .eq('user_id', user.id)
-        .gte('meal_date', thirtyDaysAgo.toISOString());
+        .gte('created_at', thirtyDaysAgo.toISOString());
 
       const mealsRegistered = monthMeals?.length || 0;
       
       const dailyCalories: { [key: string]: number } = {};
       monthMeals?.forEach((meal: any) => {
-        const date = new Date(meal.meal_date).toISOString().split('T')[0];
-        dailyCalories[date] = (dailyCalories[date] || 0) + (Number(meal.calories) || 0);
+        const date = new Date(meal.created_at).toISOString().split('T')[0];
+        dailyCalories[date] = (dailyCalories[date] || 0) + (Number(meal.total_calories) || 0);
       });
       const calorieGoalDays = Object.values(dailyCalories).filter(cal => cal >= 1800 && cal <= 2400).length;
 
       const dailyProtein: { [key: string]: number } = {};
       monthMeals?.forEach((meal: any) => {
-        const date = new Date(meal.meal_date).toISOString().split('T')[0];
-        dailyProtein[date] = (dailyProtein[date] || 0) + (Number(meal.protein) || 0);
+        const date = new Date(meal.created_at).toISOString().split('T')[0];
+        dailyProtein[date] = (dailyProtein[date] || 0) + (Number(meal.total_protein) || 0);
       });
       const avgProtein = Object.keys(dailyProtein).length > 0 ?
         Math.round(Object.values(dailyProtein).reduce((a, b) => a + b, 0) / Object.keys(dailyProtein).length) : 0;

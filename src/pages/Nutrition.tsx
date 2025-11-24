@@ -99,9 +99,9 @@ const Nutrition = () => {
         .from('meals')
         .select('*')
         .eq('user_id', session.session.user.id)
-        .gte('meal_date', today.toISOString())
-        .lt('meal_date', tomorrow.toISOString())
-        .order('meal_date', { ascending: false });
+        .gte('created_at', today.toISOString())
+        .lt('created_at', tomorrow.toISOString())
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error("Erro ao carregar refeições:", error);
@@ -318,13 +318,11 @@ const Nutrition = () => {
       if (session?.session?.user) {
         const mealData = {
           user_id: session.session.user.id,
-          calories: Math.round(result.totals.calories),
-          protein: result.totals.protein,
-          carbs: result.totals.carbs,
-          fat: result.totals.fat,
-          meal_date: new Date().toISOString(),
-          meal_time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          foods_details: result.foods
+          total_calories: Math.round(result.totals.calories),
+          total_protein: result.totals.protein,
+          total_carbs: result.totals.carbs,
+          total_fat: result.totals.fat,
+          foods: result.foods
         };
         
         console.log('Salvando refeição:', mealData);
@@ -620,17 +618,16 @@ const Nutrition = () => {
           ) : (
             <div className="space-y-3">
               {savedMeals.map((meal) => {
-                // meal.meal_time is already a formatted string like "14:30", meal_date is a timestamp
-                const mealTime = meal.meal_time || new Date(meal.meal_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const mealTime = new Date(meal.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 
-                // Generate meal name from foods_details if name is not available
+                // Generate meal name from foods if name is not available
                 const getMealName = () => {
-                  if (meal.name) {
-                    return meal.name.replace('Refeição: ', '');
+                  if (meal.meal_name) {
+                    return meal.meal_name.replace('Refeição: ', '');
                   }
-                  if (meal.foods_details && Array.isArray(meal.foods_details) && meal.foods_details.length > 0) {
-                    const firstFoods = meal.foods_details.slice(0, 2).map((f: any) => f.name).join(', ');
-                    return meal.foods_details.length > 2 ? `${firstFoods} e mais` : firstFoods;
+                  if (meal.foods && Array.isArray(meal.foods) && meal.foods.length > 0) {
+                    const firstFoods = meal.foods.slice(0, 2).map((f: any) => f.name).join(', ');
+                    return meal.foods.length > 2 ? `${firstFoods} e mais` : firstFoods;
                   }
                   return `Refeição de ${mealTime}`;
                 };
@@ -658,9 +655,9 @@ const Nutrition = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-orange-500">{Math.round(meal.calories || 0)} kcal</div>
+                        <div className="text-2xl font-bold text-orange-500">{Math.round(meal.total_calories || 0)} kcal</div>
                         <div className="text-sm text-muted-foreground whitespace-nowrap">
-                          P: {Math.round((meal.protein || 0) * 10) / 10}g • C: {Math.round((meal.carbs || 0) * 10) / 10}g • G: {Math.round((meal.fat || 0) * 10) / 10}g
+                          P: {Math.round((meal.total_protein || 0) * 10) / 10}g • C: {Math.round((meal.total_carbs || 0) * 10) / 10}g • G: {Math.round((meal.total_fat || 0) * 10) / 10}g
                         </div>
                       </div>
                     </div>
@@ -669,9 +666,9 @@ const Nutrition = () => {
                       <div className="mt-6 pt-4 border-t border-border/50">
                         <h4 className="font-semibold mb-4">Alimentos identificados:</h4>
                         
-                        {meal.foods_details && Array.isArray(meal.foods_details) ? (
+                        {meal.foods && Array.isArray(meal.foods) ? (
                           <ul className="space-y-4 mb-6">
-                            {meal.foods_details.map((food: any, index: number) => (
+                            {meal.foods.map((food: any, index: number) => (
                               <li key={index}>
                                 <div className="flex items-start gap-2">
                                   <span className="text-orange-500 mt-1 text-base">•</span>

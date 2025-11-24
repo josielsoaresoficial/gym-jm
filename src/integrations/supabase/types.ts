@@ -59,12 +59,69 @@ export type Database = {
         }
         Relationships: []
       }
+      meals: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          foods: Json
+          id: string
+          image_url: string | null
+          meal_name: string | null
+          meal_type: string | null
+          notes: string | null
+          total_calories: number
+          total_carbs: number
+          total_fat: number
+          total_protein: number
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          foods?: Json
+          id?: string
+          image_url?: string | null
+          meal_name?: string | null
+          meal_type?: string | null
+          notes?: string | null
+          total_calories?: number
+          total_carbs?: number
+          total_fat?: number
+          total_protein?: number
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          foods?: Json
+          id?: string
+          image_url?: string | null
+          meal_name?: string | null
+          meal_type?: string | null
+          notes?: string | null
+          total_calories?: number
+          total_carbs?: number
+          total_fat?: number
+          total_protein?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_daily_nutrition: {
+        Args: { p_date?: string; p_user_id: string }
+        Returns: {
+          meal_count: number
+          total_calories: number
+          total_carbs: number
+          total_fat: number
+          total_protein: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
