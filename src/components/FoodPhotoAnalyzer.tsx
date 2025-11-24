@@ -414,12 +414,55 @@ export const FoodPhotoAnalyzer = () => {
       </Dialog>
 
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Gramaturas dos Alimentos</DialogTitle>
           </DialogHeader>
           {analysisResult && (
-            <div className="py-4">
+            <div className="py-4 space-y-4">
+              {/* Lista de alimentos editáveis */}
+              <div className="space-y-3">
+                {analysisResult.analise.alimentos.map((food, index) => (
+                  <div key={index} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{food.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {Math.round(food.nutrition.calories)} kcal
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditFood(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Qtd:</span>
+                        <span className="ml-1 font-medium">{food.quantity}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Prot:</span>
+                        <span className="ml-1 font-medium">{Math.round(food.nutrition.protein)}g</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Carb:</span>
+                        <span className="ml-1 font-medium">{Math.round(food.nutrition.carbs)}g</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Gord:</span>
+                        <span className="ml-1 font-medium">{Math.round(food.nutrition.fat)}g</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Totais */}
               <div className="bg-primary/10 rounded-lg p-4">
                 <h4 className="font-semibold mb-3">Total da Refeição</h4>
                 <div className="grid grid-cols-4 gap-4 text-center">
