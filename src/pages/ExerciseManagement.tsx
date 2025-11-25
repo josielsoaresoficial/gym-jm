@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Filter, Database, Upload } from 'lucide-react';
+import { Search, Filter, Database, Upload, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/untyped';
 import { toast } from 'sonner';
 import ExerciseManagementCard from '@/components/ExerciseManagementCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BulkGifUploader } from '@/components/BulkGifUploader';
+import AddExerciseDialog from '@/components/AddExerciseDialog';
 
 interface Exercise {
   id: string;
@@ -35,6 +36,7 @@ const ExerciseManagement: React.FC = () => {
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+  const [addExerciseOpen, setAddExerciseOpen] = useState(false);
 
   const muscleGroups = [
     { value: 'all', label: 'Todos os Grupos' },
@@ -128,13 +130,23 @@ const ExerciseManagement: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={() => setBulkUploadOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload em Lote
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setAddExerciseOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Novo Exercício
+              </Button>
+              <Button 
+                onClick={() => setBulkUploadOpen(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Upload em Lote
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -251,13 +263,20 @@ const ExerciseManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Bulk Upload Dialog - Nova Versão Melhorada */}
+        {/* Add Exercise Dialog */}
+        <AddExerciseDialog
+          open={addExerciseOpen}
+          onOpenChange={setAddExerciseOpen}
+          onSuccess={fetchExercises}
+        />
+
+        {/* Bulk Upload Dialog */}
         <Dialog open={bulkUploadOpen} onOpenChange={setBulkUploadOpen}>
           <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Upload em Lote de GIFs - Nova Versão</DialogTitle>
+              <DialogTitle>Upload em Lote de GIFs</DialogTitle>
               <DialogDescription>
-                Sistema melhorado com filtro por grupo muscular e correspondência automática inteligente
+                Sistema com filtro por grupo muscular e correspondência automática inteligente
               </DialogDescription>
             </DialogHeader>
             <BulkGifUploader 
