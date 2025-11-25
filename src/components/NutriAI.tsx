@@ -95,97 +95,114 @@ const NutriAI = () => {
 
   // ✅ CONFIGURAÇÃO AVANÇADA DE VOZ
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window) {
-      const recognition = new (window as any).webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'pt-BR';
-      recognition.maxAlternatives = 3;
+    console.log('🔧 useEffect reconhecimento - isActive:', isActive, 'isPaused:', isPaused);
+    
+    if (!('webkitSpeechRecognition' in window)) {
+      console.error('❌ webkitSpeechRecognition não disponível neste navegador');
+      return;
+    }
 
-      recognition.onstart = () => {
-        console.log('🎤 Reconhecimento de voz INICIADO - Microfone ativo');
-        isRecognitionActive.current = true;
-        setIsListening(true);
-      };
+    const recognition = new (window as any).webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'pt-BR';
+    recognition.maxAlternatives = 3;
 
-      recognition.onend = () => {
-        console.log('🔇 Reconhecimento parou');
-        isRecognitionActive.current = false;
-        setIsListening(false);
-        
-        // ✅ RECONECTAR AUTOMATICAMENTE se ainda estiver ativo E NÃO PAUSADO
-        if (isActive && !isPaused) {
-          setTimeout(() => {
-            if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
-              try {
-                console.log('🔄 Reiniciando reconhecimento...');
-                recognitionRef.current.start();
-              } catch (e) {
-                console.log('⚠️ Reconhecimento já ativo');
-              }
+    recognition.onstart = () => {
+      console.log('🎤 Reconhecimento de voz INICIADO - Microfone ativo');
+      isRecognitionActive.current = true;
+      setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      console.log('🔇 Reconhecimento parou');
+      isRecognitionActive.current = false;
+      setIsListening(false);
+      
+      // ✅ RECONECTAR AUTOMATICAMENTE se ainda estiver ativo E NÃO PAUSADO
+      if (isActive && !isPaused) {
+        setTimeout(() => {
+          if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
+            try {
+              console.log('🔄 Reiniciando reconhecimento...');
+              recognitionRef.current.start();
+            } catch (e) {
+              console.log('⚠️ Reconhecimento já ativo');
             }
-          }, 800);
-        }
-      };
-
-      recognition.onresult = (event: any) => {
-        console.log('🎧 CAPTANDO AUDIO - isPaused:', isPaused, 'isProcessing:', isProcessing);
-        
-        // ✅ NÃO PROCESSAR SE ESTIVER PAUSADO
-        if (isPaused) {
-          console.log('⏸️ Reconhecimento pausado, ignorando entrada');
-          return;
-        }
-        
-        // Limpar timer anterior
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = null;
-        }
-        
-        let finalTranscript = '';
-        let interimTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          console.log(`📊 Resultado ${i}: "${transcript}" (final: ${event.results[i].isFinal})`);
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
           }
+        }, 800);
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      console.log('🎧 CAPTANDO AUDIO - isPaused:', isPaused, 'isProcessing:', isProcessing);
+      
+      // ✅ NÃO PROCESSAR SE ESTIVER PAUSADO
+      if (isPaused) {
+        console.log('⏸️ Reconhecimento pausado, ignorando entrada');
+        return;
+      }
+      
+      // Limpar timer anterior
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      
+      let finalTranscript = '';
+      let interimTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        console.log(`📊 Resultado ${i}: "${transcript}" (final: ${event.results[i].isFinal})`);
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
         }
+      }
+      
+      // Se tiver resultado final, processar imediatamente
+      if (finalTranscript.trim()) {
+        console.log('✅ Texto FINAL capturado:', finalTranscript);
+        interimTranscriptRef.current = '';
+        sendMessage(finalTranscript, true);
+      } else if (interimTranscript.trim()) {
+        // Armazenar resultado intermediário
+        interimTranscriptRef.current = interimTranscript;
+        console.log('💬 Texto INTERMEDIÁRIO armazenado:', interimTranscript);
         
-        // Se tiver resultado final, processar imediatamente
-        if (finalTranscript.trim()) {
-          console.log('✅ Texto FINAL capturado:', finalTranscript);
-          interimTranscriptRef.current = '';
-          sendMessage(finalTranscript, true);
-        } else if (interimTranscript.trim()) {
-          // Armazenar resultado intermediário
-          interimTranscriptRef.current = interimTranscript;
-          console.log('💬 Texto INTERMEDIÁRIO armazenado:', interimTranscript);
-          
-          // Se não houver mais fala em 1.5s, processar o resultado intermediário
-          silenceTimerRef.current = setTimeout(() => {
-            if (interimTranscriptRef.current.trim()) {
-              console.log('⏱️ Processando por SILÊNCIO:', interimTranscriptRef.current);
-              sendMessage(interimTranscriptRef.current, true);
-              interimTranscriptRef.current = '';
-            }
-          }, 1500);
-        }
-      };
+        // Se não houver mais fala em 1.5s, processar o resultado intermediário
+        silenceTimerRef.current = setTimeout(() => {
+          if (interimTranscriptRef.current.trim()) {
+            console.log('⏱️ Processando por SILÊNCIO:', interimTranscriptRef.current);
+            sendMessage(interimTranscriptRef.current, true);
+            interimTranscriptRef.current = '';
+          }
+        }, 1500);
+      }
+    };
 
-      recognition.onerror = (event: any) => {
-        console.error('❌ Erro no reconhecimento:', event.error);
-        isRecognitionActive.current = false;
-        if (event.error === 'not-allowed') {
-          alert('Permissão de microfone negada. Ative o microfone para conversar com o NutriAI.');
-        }
-      };
+    recognition.onerror = (event: any) => {
+      console.error('❌ Erro no reconhecimento:', event.error);
+      isRecognitionActive.current = false;
+      if (event.error === 'not-allowed') {
+        alert('Permissão de microfone negada. Ative o microfone para conversar com o NutriAI.');
+      }
+    };
 
-      recognitionRef.current = recognition;
+    recognitionRef.current = recognition;
+    
+    // ✅ INICIAR RECONHECIMENTO SE JÁ ESTÁ ATIVO
+    if (isActive && !isPaused && !isRecognitionActive.current) {
+      setTimeout(() => {
+        try {
+          console.log('▶️ Iniciando reconhecimento de voz automaticamente...');
+          recognition.start();
+        } catch (e) {
+          console.error('❌ Erro ao iniciar reconhecimento:', e);
+        }
+      }, 2500);
     }
     
     return () => {
@@ -208,18 +225,6 @@ const NutriAI = () => {
     // Inicia a conversa
     await startConversation();
     console.log('💬 Conversa iniciada, preparando reconhecimento de voz...');
-    
-    // Inicia o reconhecimento de voz
-    if (recognitionRef.current) {
-      setTimeout(() => {
-        try {
-          console.log('▶️ Iniciando reconhecimento de voz...');
-          recognitionRef.current.start();
-        } catch (e) {
-          console.log('⚠️ Erro ao iniciar reconhecimento:', e);
-        }
-      }, 2000); // Aumentado para 2s para dar tempo do TTS começar
-    }
   };
 
   // ✅ PAUSAR/RETOMAR CONVERSA
