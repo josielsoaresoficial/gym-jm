@@ -125,37 +125,37 @@ serve(async (req) => {
       availableExercises: exerciseLibrary || []
     };
 
-    const systemPrompt = `You are an expert fitness coach creating personalized workout recommendations. 
-Analyze the user's profile and workout history to suggest 5-7 exercises that:
-1. Align with their fitness goal (${userContext.fitnessGoal})
-2. Match their experience level based on recent activity
-3. Provide variety by focusing on muscle groups they haven't trained recently
-4. Progress appropriately from their recent workouts
-5. Are available in the exercise library
+    const systemPrompt = `Você é um personal trainer especialista criando recomendações personalizadas de treino. 
+Analise o perfil e histórico de treinos do usuário para sugerir 5-7 exercícios que:
+1. Estejam alinhados com o objetivo fitness (${userContext.fitnessGoal})
+2. Correspondam ao nível de experiência baseado na atividade recente
+3. Proporcionem variedade focando em grupos musculares que não foram treinados recentemente
+4. Progridam apropriadamente a partir dos treinos recentes
+5. Estejam disponíveis na biblioteca de exercícios
 
-Consider:
-- Recovery time between muscle groups
-- Progressive overload principles
-- Balance between compound and isolation exercises
-- Workout frequency and volume
+Considere:
+- Tempo de recuperação entre grupos musculares
+- Princípios de sobrecarga progressiva
+- Equilíbrio entre exercícios compostos e de isolamento
+- Frequência e volume de treino
 
-Return recommendations in this exact JSON format using the suggest_workout_plan tool.`;
+IMPORTANTE: Retorne todas as recomendações em PORTUGUÊS BRASILEIRO usando a ferramenta suggest_workout_plan.`;
 
-    const userPrompt = `User Profile:
-- Fitness Goal: ${userContext.fitnessGoal}
-- Age: ${userContext.age || 'unknown'}
-- Gender: ${userContext.gender || 'unknown'}
+    const userPrompt = `Perfil do Usuário:
+- Objetivo Fitness: ${userContext.fitnessGoal}
+- Idade: ${userContext.age || 'desconhecida'}
+- Gênero: ${userContext.gender || 'desconhecido'}
 
-Recent Workouts (last 30 days):
-${userContext.recentWorkouts.map(w => `- ${w.workout_name} (${new Date(w.completed_at).toLocaleDateString()})`).join('\n') || 'No recent workouts'}
+Treinos Recentes (últimos 30 dias):
+${userContext.recentWorkouts.map(w => `- ${w.workout_name} (${new Date(w.completed_at).toLocaleDateString()})`).join('\n') || 'Sem treinos recentes'}
 
-Recent Exercises:
-${userContext.recentExercises.map(e => `- ${e.exercise_name} (${e.sets}x${e.reps}${e.weight ? ` @ ${e.weight}kg` : ''})`).join('\n') || 'No recent exercises'}
+Exercícios Recentes:
+${userContext.recentExercises.map(e => `- ${e.exercise_name} (${e.sets}x${e.reps}${e.weight ? ` @ ${e.weight}kg` : ''})`).join('\n') || 'Sem exercícios recentes'}
 
-Available Exercises:
+Exercícios Disponíveis:
 ${userContext.availableExercises.map(e => `- ${e.name} (${e.muscle_group}, ${e.difficulty})`).join('\n')}
 
-Generate a personalized workout plan with exercise recommendations.`;
+Gere um plano de treino personalizado com recomendações de exercícios EM PORTUGUÊS BRASILEIRO.`;
 
     const body = {
       model: "google/gemini-2.5-flash",
@@ -168,7 +168,7 @@ Generate a personalized workout plan with exercise recommendations.`;
           type: "function",
           function: {
             name: "suggest_workout_plan",
-            description: "Suggest a personalized workout plan with specific exercises",
+            description: "Sugerir um plano de treino personalizado com exercícios específicos em português brasileiro",
             parameters: {
               type: "object",
               properties: {
@@ -177,20 +177,20 @@ Generate a personalized workout plan with exercise recommendations.`;
                   items: {
                     type: "object",
                     properties: {
-                      exerciseName: { type: "string", description: "Name of the exercise from the library" },
-                      muscleGroup: { type: "string", description: "Primary muscle group targeted" },
-                      sets: { type: "number", description: "Recommended number of sets" },
-                      reps: { type: "string", description: "Recommended reps or duration" },
-                      restTime: { type: "number", description: "Rest time in seconds between sets" },
-                      reason: { type: "string", description: "Why this exercise is recommended for the user" },
-                      difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] }
+                      exerciseName: { type: "string", description: "Nome do exercício da biblioteca em português" },
+                      muscleGroup: { type: "string", description: "Grupo muscular principal trabalhado em português" },
+                      sets: { type: "number", description: "Número recomendado de séries" },
+                      reps: { type: "string", description: "Repetições ou duração recomendada" },
+                      restTime: { type: "number", description: "Tempo de descanso em segundos entre séries" },
+                      reason: { type: "string", description: "Por que este exercício é recomendado para o usuário em português" },
+                      difficulty: { type: "string", enum: ["iniciante", "intermediário", "avançado"] }
                     },
                     required: ["exerciseName", "muscleGroup", "sets", "reps", "reason"]
                   }
                 },
                 overallAdvice: { 
                   type: "string", 
-                  description: "General advice about the workout plan and progression" 
+                  description: "Conselho geral sobre o plano de treino e progressão em português brasileiro" 
                 }
               },
               required: ["recommendations", "overallAdvice"]
@@ -217,12 +217,12 @@ Generate a personalized workout plan with exercise recommendations.`;
       console.error('AI API error:', aiResponse.status, errorText);
       
       if (aiResponse.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
+        throw new Error('Limite de requisições excedido. Por favor, tente novamente mais tarde.');
       }
       if (aiResponse.status === 402) {
-        throw new Error('Payment required. Please add credits to your workspace.');
+        throw new Error('Pagamento necessário. Por favor, adicione créditos ao seu workspace.');
       }
-      throw new Error('Failed to generate workout recommendations');
+      throw new Error('Falha ao gerar recomendações de treino');
     }
 
     const aiData = await aiResponse.json();
@@ -230,7 +230,7 @@ Generate a personalized workout plan with exercise recommendations.`;
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
-      throw new Error('No workout recommendations generated');
+      throw new Error('Nenhuma recomendação de treino gerada');
     }
 
     const workoutPlan = JSON.parse(toolCall.function.arguments);

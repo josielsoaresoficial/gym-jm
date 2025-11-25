@@ -33,7 +33,7 @@ export const WorkoutRecommendations = () => {
   const generateRecommendations = async () => {
     // Check authentication first
     if (!user || !session) {
-      toast.error("You need to be logged in to get recommendations");
+      toast.error("Você precisa estar logado para obter recomendações");
       navigate("/login");
       return;
     }
@@ -48,7 +48,7 @@ export const WorkoutRecommendations = () => {
 
       if (error) {
         if (error.message?.includes('Unauthorized')) {
-          toast.error("Authentication error. Please log in again.");
+          toast.error("Erro de autenticação. Por favor, faça login novamente.");
           navigate("/login");
           return;
         }
@@ -60,10 +60,10 @@ export const WorkoutRecommendations = () => {
       }
 
       setWorkoutPlan(data);
-      toast.success("Workout recommendations generated!");
+      toast.success("Recomendações de treino geradas!");
     } catch (error) {
       console.error('Error generating recommendations:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate recommendations");
+      toast.error(error instanceof Error ? error.message : "Falha ao gerar recomendações");
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +71,13 @@ export const WorkoutRecommendations = () => {
 
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty?.toLowerCase()) {
+      case 'iniciante':
       case 'beginner':
         return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'intermediário':
       case 'intermediate':
         return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'avançado':
       case 'advanced':
         return 'bg-red-500/10 text-red-500 border-red-500/20';
       default:
@@ -119,7 +122,7 @@ export const WorkoutRecommendations = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle>AI Workout Recommendations</CardTitle>
+            <CardTitle>Recomendações de Treino AI</CardTitle>
           </div>
           <Button 
             onClick={generateRecommendations} 
@@ -130,32 +133,32 @@ export const WorkoutRecommendations = () => {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
+                Gerando...
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Get Recommendations
+                Obter Recomendações
               </>
             )}
           </Button>
         </div>
         <CardDescription>
-          Personalized exercise suggestions based on your goals and workout history
+          Sugestões personalizadas de exercícios baseadas nos seus objetivos e histórico de treinos
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!workoutPlan && !isLoading && (
           <div className="text-center py-8 text-muted-foreground">
             <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Click "Get Recommendations" to receive your personalized workout plan</p>
+            <p>Clique em "Obter Recomendações" para receber seu plano de treino personalizado</p>
           </div>
         )}
 
         {isLoading && (
           <div className="text-center py-8">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Analyzing your fitness profile...</p>
+            <p className="text-muted-foreground">Analisando seu perfil fitness...</p>
           </div>
         )}
 
