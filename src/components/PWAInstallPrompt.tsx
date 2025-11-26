@@ -157,8 +157,8 @@ export function PWAInstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl border-2 border-primary/20 animate-in slide-in-from-bottom duration-500">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+      <Card className="w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl border-2 border-primary/20 animate-in slide-in-from-top duration-500">
         <div className="relative p-6">
           <button
             onClick={handleDismiss}
