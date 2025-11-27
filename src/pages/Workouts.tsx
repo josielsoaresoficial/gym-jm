@@ -68,11 +68,13 @@ export default function Workouts() {
   const [selectedGroup, setSelectedGroup] = useState('peito');
   const [exerciseSearchTerm, setExerciseSearchTerm] = useState('');
   const [exerciseCounts, setExerciseCounts] = useState<Record<string, number>>({});
+  const [supabaseExercises, setSupabaseExercises] = useState<any[]>([]);
 
   useEffect(() => {
     loadWorkouts();
     loadWorkoutHistory();
     loadExerciseCounts();
+    loadExercisesForGroup('peito'); // Carregar exercícios do grupo inicial
   }, []);
 
   const loadWorkouts = async () => {
@@ -143,6 +145,36 @@ export default function Workouts() {
     });
 
     setExerciseCounts(counts);
+  };
+
+  const loadExercisesForGroup = async (groupId: string) => {
+    const groupMapping: Record<string, string[]> = {
+      'peito': ['peito', 'peitoral', 'chest'],
+      'costas': ['costas', 'back'],
+      'ombros': ['ombros', 'ombro', 'shoulders'],
+      'biceps': ['biceps', 'bíceps'],
+      'triceps': ['triceps', 'tríceps'],
+      'antebraco': ['antebraco', 'antebraço', 'forearm'],
+      'pernas': ['pernas', 'perna', 'legs', 'quadriceps', 'posterior'],
+      'gluteos': ['gluteos', 'glúteos', 'glutes'],
+      'abdomen': ['abdomen', 'abdômen', 'abs'],
+      'cardio': ['cardio']
+    };
+
+    const keywords = groupMapping[groupId] || [groupId];
+    
+    const { data, error } = await supabase
+      .from("exercise_library")
+      .select("*");
+
+    if (!error && data) {
+      const filtered = data.filter(ex =>
+        keywords.some(keyword =>
+          ex.muscle_group?.toLowerCase().includes(keyword.toLowerCase())
+        )
+      );
+      setSupabaseExercises(filtered);
+    }
   };
 
   const handleMuscleSelect = (muscle: string) => {
@@ -248,8 +280,8 @@ export default function Workouts() {
     }
   ];
 
-  const filteredExercises = exerciseDatabase[selectedGroup]?.filter(exercise =>
-    exercise.name.toLowerCase().includes(exerciseSearchTerm.toLowerCase())
+  const filteredExercises = supabaseExercises.filter(exercise =>
+    exercise.name?.toLowerCase().includes(exerciseSearchTerm.toLowerCase())
   );
 
   return (
@@ -494,6 +526,7 @@ export default function Workouts() {
                   onClick={() => {
                     setSelectedGroup(group.id);
                     setSelectedGroupDetail(group);
+                    loadExercisesForGroup(group.id);
                   }}
                 />
               ))}
