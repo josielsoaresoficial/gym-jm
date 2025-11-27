@@ -67,7 +67,13 @@ export function usePushNotifications() {
       setPermission(result);
 
       if (result !== 'granted') {
-        toast.error('Permissão para notificações negada');
+        if (result === 'denied') {
+          toast.error('Permissão negada. Veja as instruções abaixo para habilitar nas configurações do navegador.', {
+            duration: 5000,
+          });
+        } else {
+          toast.error('Permissão para notificações não concedida');
+        }
         setLoading(false);
         return false;
       }

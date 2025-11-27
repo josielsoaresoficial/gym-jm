@@ -88,6 +88,25 @@ export function PushNotificationSettings() {
           </Button>
         </div>
 
+        {permission === 'denied' && (
+          <div className="pt-4 border-t">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium text-destructive">
+                Permissão negada pelo navegador
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Para ativar as notificações, você precisa permitir nas configurações do seu navegador:
+              </p>
+              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Clique no ícone de cadeado (🔒) ou informações (ℹ️) na barra de endereço</li>
+                <li>Procure por "Notificações" nas permissões do site</li>
+                <li>Altere de "Bloquear" para "Permitir"</li>
+                <li>Recarregue a página e clique em "Ativar" novamente</li>
+              </ol>
+            </div>
+          </div>
+        )}
+
         {isSubscribed && (
           <div className="pt-4 border-t">
             <Button
