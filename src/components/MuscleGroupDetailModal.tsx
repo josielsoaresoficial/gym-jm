@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Target, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dumbbell, Target, Info, ChevronDown } from "lucide-react";
 
 interface MuscleGroup {
   id: string;
@@ -19,7 +21,12 @@ interface MuscleGroupDetailModalProps {
 }
 
 export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGroupDetailModalProps) {
+  const [showAllExercises, setShowAllExercises] = useState(false);
+  
   if (!group) return null;
+
+  const displayedExercises = showAllExercises ? exercises : exercises.slice(0, 8);
+  const hasMoreExercises = exercises.length > 8;
 
   return (
     <Dialog open={!!group} onOpenChange={onClose}>
@@ -80,41 +87,54 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
             </CardHeader>
             <CardContent>
               {exercises.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {exercises.slice(0, 8).map((exercise, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                    >
-                      {exercise.gif_url && (
-                        <img 
-                          src={exercise.gif_url} 
-                          alt={exercise.name}
-                          className="w-12 h-12 rounded object-cover"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{exercise.name}</p>
-                        {exercise.difficulty && (
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {exercise.difficulty}
-                          </Badge>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {displayedExercises.map((exercise, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                      >
+                        {exercise.gif_url && (
+                          <img 
+                            src={exercise.gif_url} 
+                            alt={exercise.name}
+                            className="w-12 h-12 rounded object-cover"
+                          />
                         )}
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{exercise.name}</p>
+                          {exercise.difficulty && (
+                            <Badge variant="outline" className="text-xs mt-1">
+                              {exercise.difficulty}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  {hasMoreExercises && (
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowAllExercises(!showAllExercises)}
+                    >
+                      {showAllExercises ? (
+                        <>Mostrar menos</>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4 mr-1" />
+                          + {exercises.length - 8} exercícios adicionais
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>Nenhum exercício cadastrado ainda</p>
                   <p className="text-sm mt-1">Use o upload em lote para adicionar exercícios</p>
                 </div>
-              )}
-              {exercises.length > 8 && (
-                <p className="text-sm text-muted-foreground text-center mt-4">
-                  + {exercises.length - 8} exercícios adicionais
-                </p>
               )}
             </CardContent>
           </Card>
