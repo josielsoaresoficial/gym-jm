@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,10 +22,15 @@ interface MuscleGroupDetailModalProps {
 }
 
 export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGroupDetailModalProps) {
+  const navigate = useNavigate();
   const [showAllExercises, setShowAllExercises] = useState(false);
   const [selectedSubdivision, setSelectedSubdivision] = useState<string | null>(null);
   
   if (!group) return null;
+
+  const handleExerciseClick = (exerciseId: string) => {
+    navigate(`/exercise/${exerciseId}`);
+  };
 
   // Filtrar exercícios por subdivisão selecionada
   const filteredBySubdivision = selectedSubdivision
@@ -127,7 +133,8 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
                     {displayedExercises.map((exercise, index) => (
                       <div 
                         key={index}
-                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                        onClick={() => handleExerciseClick(exercise.id)}
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
                       >
                         {exercise.gif_url && (
                           <img 
