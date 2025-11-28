@@ -132,35 +132,36 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
     setCurrentStep('analyze');
     setAnalysisProgress(0);
 
-    const batchSize = 3; // Processa 3 GIFs por vez
-    const delay = 2000; // 2 segundos entre lotes
+    const delayBetweenRequests = 15000; // 15 segundos entre cada análise para evitar rate limit
 
-    for (let i = 0; i < files.length; i += batchSize) {
-      const batch = files.slice(i, i + batchSize);
+    // Processa um GIF por vez
+    for (let i = 0; i < files.length; i++) {
+      const gifFile = files[i];
       
-      await Promise.all(
-        batch.map(async (gifFile, batchIndex) => {
-          const globalIndex = i + batchIndex;
-          
+      try {
+        // Atualiza status para analyzing
+        setFiles(prev => {
+          const newFiles = [...prev];
+          newFiles[i] = { ...newFiles[i], status: 'analyzing' };
+          return newFiles;
+        });
+
+        // Converte GIF para base64
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(gifFile.file);
+        });
+
+        const base64 = await base64Promise;
+
+        // Chama edge function com retry
+        let retries = 3;
+        let success = false;
+        
+        while (retries > 0 && !success) {
           try {
-            // Atualiza status para analyzing
-            setFiles(prev => {
-              const newFiles = [...prev];
-              newFiles[globalIndex] = { ...newFiles[globalIndex], status: 'analyzing' };
-              return newFiles;
-            });
-
-            // Converte GIF para base64
-            const reader = new FileReader();
-            const base64Promise = new Promise<string>((resolve, reject) => {
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(gifFile.file);
-            });
-
-            const base64 = await base64Promise;
-
-            // Chama edge function
             const { data, error } = await supabase.functions.invoke('analyze-exercise-gif', {
               body: {
                 imageBase64: base64,
@@ -168,7 +169,16 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
               }
             });
 
-            if (error) throw error;
+            if (error) {
+              // Se for erro 429 (rate limit), aguarda mais tempo
+              if (error.message?.includes('429')) {
+                console.log('Rate limit detectado, aguardando 60 segundos...');
+                await new Promise(resolve => setTimeout(resolve, 60000));
+                retries--;
+                continue;
+              }
+              throw error;
+            }
 
             if (data?.success && data?.analysis) {
               const analysis = data.analysis;
@@ -187,8 +197,8 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
 
               setFiles(prev => {
                 const newFiles = [...prev];
-                newFiles[globalIndex] = {
-                  ...newFiles[globalIndex],
+                newFiles[i] = {
+                  ...newFiles[i],
                   aiAnalysis: analysis,
                   comparison,
                   selectedExerciseId: bestMatch.exerciseId || undefined,
@@ -198,36 +208,57 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
                 };
                 return newFiles;
               });
+              
+              success = true;
             } else {
               throw new Error('Análise falhou');
             }
-
-          } catch (error) {
-            console.error('Erro ao analisar GIF:', error);
-            setFiles(prev => {
-              const newFiles = [...prev];
-              newFiles[globalIndex] = {
-                ...newFiles[globalIndex],
-                status: 'error',
-                error: error instanceof Error ? error.message : 'Erro desconhecido'
-              };
-              return newFiles;
-            });
+          } catch (innerError) {
+            if (retries === 1) {
+              throw innerError;
+            }
+            retries--;
+            await new Promise(resolve => setTimeout(resolve, 5000));
           }
-        })
-      );
+        }
 
-      setAnalysisProgress(Math.round(((i + batch.length) / files.length) * 100));
+      } catch (error) {
+        console.error('Erro ao analisar GIF:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        
+        setFiles(prev => {
+          const newFiles = [...prev];
+          newFiles[i] = {
+            ...newFiles[i],
+            status: 'error',
+            error: errorMessage.includes('429') 
+              ? 'Limite de API excedido. Aguarde alguns minutos e tente novamente.'
+              : errorMessage
+          };
+          return newFiles;
+        });
+      }
 
-      // Aguarda entre lotes (exceto no último)
-      if (i + batchSize < files.length) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+      setAnalysisProgress(Math.round(((i + 1) / files.length) * 100));
+
+      // Aguarda entre requisições (exceto na última)
+      if (i < files.length - 1) {
+        console.log(`Aguardando ${delayBetweenRequests / 1000}s antes da próxima análise...`);
+        await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
       }
     }
 
     setIsAnalyzing(false);
     setCurrentStep('review');
-    toast.success('Análise concluída! Revise os resultados');
+    
+    const successCount = files.filter(f => f.status === 'analyzed').length;
+    const errorCount = files.filter(f => f.status === 'error').length;
+    
+    if (errorCount > 0) {
+      toast.warning(`${successCount} análises concluídas, ${errorCount} com erro`);
+    } else {
+      toast.success('Análise concluída! Revise os resultados');
+    }
   };
 
   const approveFile = (index: number, approved: boolean) => {
