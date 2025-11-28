@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Clock, Dumbbell, TrendingUp, Video, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Dumbbell, TrendingUp, Video, CheckCircle2, ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { Exercise } from "@/database/exercises";
 import { ExerciseRegistrationDialog } from "./ExerciseRegistrationDialog";
+import EditExerciseDialog from "./EditExerciseDialog";
 import AnimatedExercise from "./AnimatedExercise";
 import { useStrengthProgress } from "@/hooks/useStrengthProgress";
 
@@ -28,6 +29,8 @@ export function InteractiveMuscleGroup({
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [showSubdivisions, setShowSubdivisions] = useState(false);
+  const [editExercise, setEditExercise] = useState<any | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const { progressData, calculateProgress } = useStrengthProgress();
 
@@ -144,21 +147,36 @@ export function InteractiveMuscleGroup({
                     </p>
 
                     {/* Séries e Reps */}
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3 text-sm flex-wrap">
                       <span className="font-medium">
                         📊 {exercise.sets} séries × {exercise.reps}
                       </span>
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRegisterClick(exercise);
-                        }}
-                        className="gap-1"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Registrar
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRegisterClick(exercise);
+                          }}
+                          className="gap-1"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          Registrar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditExercise(exercise);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="gap-1"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Editar
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Barra de Progresso */}
@@ -270,6 +288,34 @@ export function InteractiveMuscleGroup({
           isOpen={isRegistrationOpen}
           onClose={() => setIsRegistrationOpen(false)}
           exercise={selectedExercise}
+        />
+      )}
+
+      {/* Dialog de Edição */}
+      {editExercise && (
+        <EditExerciseDialog
+          exercise={{
+            id: editExercise.id,
+            name: editExercise.name,
+            muscle_group: editExercise.muscle_group,
+            difficulty: editExercise.difficulty,
+            description: editExercise.description,
+            gif_url: editExercise.gif_url,
+            sets: editExercise.sets,
+            reps: editExercise.reps,
+            rest_time: editExercise.restTime,
+            duration: editExercise.duration,
+            equipment: editExercise.equipment,
+            instructions: editExercise.instructions,
+            tips: editExercise.tips,
+          }}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={() => {
+            setIsEditDialogOpen(false);
+            setEditExercise(null);
+            window.location.reload();
+          }}
         />
       )}
     </div>
