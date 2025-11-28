@@ -132,7 +132,7 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
     setCurrentStep('analyze');
     setAnalysisProgress(0);
 
-    const delayBetweenRequests = 60000; // 60 segundos entre cada análise para evitar rate limit
+    const delayBetweenRequests = 120000; // 120 segundos (2 minutos) entre cada análise para evitar rate limit
 
     // Processa um GIF por vez
     for (let i = 0; i < files.length; i++) {
@@ -172,8 +172,8 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
             if (error) {
               // Se for erro 429 (rate limit), aguarda mais tempo
               if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
-                console.log('Rate limit detectado, aguardando 120 segundos...');
-                await new Promise(resolve => setTimeout(resolve, 120000));
+                console.log('Rate limit detectado, aguardando 180 segundos (3 minutos)...');
+                await new Promise(resolve => setTimeout(resolve, 180000));
                 retries--;
                 continue;
               }
@@ -475,9 +475,15 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
               Analisando GIFs com IA
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Processando 1 GIF por minuto para evitar limites de API...
+              Processando 1 GIF a cada 2 minutos para evitar limites de API...
               <br />
-              Tempo estimado: {Math.ceil(files.length)} minutos
+              <span className="text-orange-500 font-medium">
+                Tempo estimado: {Math.ceil(files.length * 2)} minutos
+              </span>
+              <br />
+              <span className="text-xs">
+                (O processo continuará mesmo se você fechar esta aba)
+              </span>
             </p>
             <Progress value={analysisProgress} className="mb-2" />
             <p className="text-sm text-muted-foreground">
