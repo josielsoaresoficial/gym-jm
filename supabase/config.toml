@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.rebuild-exercise-library]
 verify_jwt = true
+
+[functions.clear-exercise-gifs]
+verify_jwt = false

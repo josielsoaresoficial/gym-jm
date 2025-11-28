@@ -46,6 +46,8 @@ const ExerciseManagement: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [rebuildConfirmOpen, setRebuildConfirmOpen] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
+  const [clearStorageConfirmOpen, setClearStorageConfirmOpen] = useState(false);
+  const [clearingStorage, setClearingStorage] = useState(false);
 
   const muscleGroups = [
     { value: 'all', label: 'Todos os Grupos' },
@@ -148,6 +150,34 @@ const ExerciseManagement: React.FC = () => {
     }
   };
 
+  const handleClearStorage = async () => {
+    try {
+      setClearingStorage(true);
+      setClearStorageConfirmOpen(false);
+      toast.loading('Limpando storage...', { id: 'clear-storage' });
+
+      const { data, error } = await supabase.functions.invoke('clear-exercise-gifs');
+
+      if (error) throw error;
+
+      const result = data;
+      if (result?.success) {
+        const stats = result.stats;
+        toast.success(
+          `Storage limpo! ${stats.deleted} arquivos deletados${stats.failed > 0 ? `, ${stats.failed} falharam` : ''}`,
+          { id: 'clear-storage', duration: 5000 }
+        );
+      } else {
+        throw new Error(result?.error || 'Erro desconhecido');
+      }
+    } catch (error) {
+      console.error('Erro ao limpar storage:', error);
+      toast.error('Erro ao limpar storage', { id: 'clear-storage' });
+    } finally {
+      setClearingStorage(false);
+    }
+  };
+
   const handleRebuildLibrary = async () => {
     if (!session) {
       toast.error('Você precisa estar logado');
@@ -230,6 +260,15 @@ const ExerciseManagement: React.FC = () => {
               >
                 <Plus className="w-4 h-4" />
                 Novo Exercício
+              </Button>
+              <Button 
+                onClick={() => setClearStorageConfirmOpen(true)}
+                disabled={clearingStorage}
+                variant="outline"
+                className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-white"
+              >
+                <Trash2 className={`w-4 h-4 ${clearingStorage ? 'animate-spin' : ''}`} />
+                {clearingStorage ? 'Limpando...' : 'Limpar Storage'}
               </Button>
               <Button 
                 onClick={() => setRebuildConfirmOpen(true)}
@@ -426,6 +465,41 @@ const ExerciseManagement: React.FC = () => {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Clear Storage Confirmation Dialog */}
+        <AlertDialog open={clearStorageConfirmOpen} onOpenChange={setClearStorageConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="w-5 h-5" />
+                Limpar Storage de GIFs?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p className="font-semibold">⚠️ ATENÇÃO: Esta é uma operação DESTRUTIVA!</p>
+                <p>Esta ação irá:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Deletar TODOS os arquivos GIF do storage</li>
+                  <li>Remover as demonstrações visuais dos exercícios</li>
+                  <li>Liberar espaço para novos GIFs</li>
+                  <li>NÃO deletar os exercícios da biblioteca</li>
+                </ul>
+                <p className="text-destructive font-medium mt-4">Esta ação NÃO PODE ser desfeita!</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  💡 Use esta função quando quiser fazer upload de novos GIFs com nomes corretos
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleClearStorage}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Sim, Limpar Storage
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Rebuild Library Confirmation Dialog */}
         <AlertDialog open={rebuildConfirmOpen} onOpenChange={setRebuildConfirmOpen}>
