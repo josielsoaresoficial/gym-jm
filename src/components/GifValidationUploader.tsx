@@ -132,7 +132,7 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
     setCurrentStep('analyze');
     setAnalysisProgress(0);
 
-    const delayBetweenRequests = 15000; // 15 segundos entre cada análise para evitar rate limit
+    const delayBetweenRequests = 30000; // 30 segundos entre cada análise para evitar rate limit
 
     // Processa um GIF por vez
     for (let i = 0; i < files.length; i++) {
@@ -171,9 +171,9 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
 
             if (error) {
               // Se for erro 429 (rate limit), aguarda mais tempo
-              if (error.message?.includes('429')) {
-                console.log('Rate limit detectado, aguardando 60 segundos...');
-                await new Promise(resolve => setTimeout(resolve, 60000));
+              if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+                console.log('Rate limit detectado, aguardando 90 segundos...');
+                await new Promise(resolve => setTimeout(resolve, 90000));
                 retries--;
                 continue;
               }
