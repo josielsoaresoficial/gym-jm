@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Users, Share2, Copy, Check } from 'lucide-react';
+import { Trash2, Clock, Users, Share2, Copy, Check, Mail, MessageCircle, Twitter, Facebook, Send } from 'lucide-react';
 import { FavoriteRecipe, RecipeCategory } from '@/hooks/useFavoriteRecipes';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 interface RecipeCardProps {
   recipe: FavoriteRecipe;
@@ -53,31 +60,76 @@ export const RecipeCard = ({ recipe, onDelete }: RecipeCardProps) => {
     paleo: 'Paleo'
   };
 
-  const handleShareWhatsApp = () => {
+  const formatRecipeText = (forWhatsApp = false) => {
     const ingredients = recipe.ingredients
       .map(ing => `• ${ing.quantity ? `${ing.quantity} - ${ing.item}` : ing.item}`)
       .join('\n');
     
-    const macros = recipe.macros 
-      ? `\n*Informações Nutricionais:*\n${recipe.macros.calories ? `🔥 ${recipe.macros.calories} kcal\n` : ''}${recipe.macros.protein ? `💪 ${recipe.macros.protein}g proteína\n` : ''}${recipe.macros.carbs ? `🍞 ${recipe.macros.carbs}g carboidratos\n` : ''}${recipe.macros.fat ? `🥑 ${recipe.macros.fat}g gordura\n` : ''}`
+    const macrosText = recipe.macros 
+      ? `\n${forWhatsApp ? '*' : ''}Informações Nutricionais:${forWhatsApp ? '*' : ''}\n${recipe.macros.calories ? `🔥 ${recipe.macros.calories} kcal\n` : ''}${recipe.macros.protein ? `💪 ${recipe.macros.protein}g proteína\n` : ''}${recipe.macros.carbs ? `🍞 ${recipe.macros.carbs}g carboidratos\n` : ''}${recipe.macros.fat ? `🥑 ${recipe.macros.fat}g gordura\n` : ''}`
       : '';
 
-    const message = `*${recipe.title}*${recipe.prep_time ? `\n⏱️ ${recipe.prep_time}` : ''}${recipe.servings ? `\n👥 ${recipe.servings} ${recipe.servings === 1 ? 'porção' : 'porções'}` : ''}\n\n*Ingredientes:*\n${ingredients}\n\n*Modo de Preparo:*\n${recipe.instructions}${macros}${recipe.notes ? `\n\n*Notas:*\n${recipe.notes}` : ''}`;
-    
+    const title = forWhatsApp ? `*${recipe.title}*` : recipe.title;
+    const ingredientsHeader = forWhatsApp ? '*Ingredientes:*' : 'Ingredientes:';
+    const instructionsHeader = forWhatsApp ? '*Modo de Preparo:*' : 'Modo de Preparo:';
+    const notesHeader = forWhatsApp ? '*Notas:*' : 'Notas:';
+
+    return `${title}${recipe.prep_time ? `\n⏱️ ${recipe.prep_time}` : ''}${recipe.servings ? `\n👥 ${recipe.servings} ${recipe.servings === 1 ? 'porção' : 'porções'}` : ''}\n\n${ingredientsHeader}\n${ingredients}\n\n${instructionsHeader}\n${recipe.instructions}${macrosText}${recipe.notes ? `\n\n${notesHeader}\n${recipe.notes}` : ''}`;
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = formatRecipeText(true);
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
   };
 
-  const handleCopyRecipe = async () => {
-    const ingredients = recipe.ingredients
-      .map(ing => `• ${ing.quantity ? `${ing.quantity} - ${ing.item}` : ing.item}`)
-      .join('\n');
-    
-    const macros = recipe.macros 
-      ? `\nInformações Nutricionais:\n${recipe.macros.calories ? `🔥 ${recipe.macros.calories} kcal\n` : ''}${recipe.macros.protein ? `💪 ${recipe.macros.protein}g proteína\n` : ''}${recipe.macros.carbs ? `🍞 ${recipe.macros.carbs}g carboidratos\n` : ''}${recipe.macros.fat ? `🥑 ${recipe.macros.fat}g gordura\n` : ''}`
-      : '';
+  const handleShareEmail = () => {
+    const subject = encodeURIComponent(`Receita: ${recipe.title}`);
+    const body = encodeURIComponent(formatRecipeText(false));
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+  };
 
-    const text = `${recipe.title}${recipe.prep_time ? `\n⏱️ ${recipe.prep_time}` : ''}${recipe.servings ? `\n👥 ${recipe.servings} ${recipe.servings === 1 ? 'porção' : 'porções'}` : ''}\n\nIngredientes:\n${ingredients}\n\nModo de Preparo:\n${recipe.instructions}${macros}${recipe.notes ? `\n\nNotas:\n${recipe.notes}` : ''}`;
+  const handleShareTelegram = () => {
+    const text = encodeURIComponent(formatRecipeText(false));
+    window.open(`https://t.me/share/url?text=${text}`, '_blank');
+  };
+
+  const handleShareTwitter = () => {
+    const shortText = `🍽️ ${recipe.title}${recipe.macros?.calories ? ` - ${recipe.macros.calories} kcal` : ''}${recipe.macros?.protein ? ` | ${recipe.macros.protein}g proteína` : ''}\n\nConfira esta receita incrível!`;
+    const text = encodeURIComponent(shortText);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  };
+
+  const handleShareFacebook = () => {
+    const quote = encodeURIComponent(`🍽️ ${recipe.title} - Uma receita deliciosa!`);
+    window.open(`https://www.facebook.com/sharer/sharer.php?quote=${quote}`, '_blank');
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          text: formatRecipeText(false),
+        });
+        toast({
+          title: "Compartilhado!",
+          description: "Receita compartilhada com sucesso",
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          toast({
+            title: "Erro",
+            description: "Não foi possível compartilhar",
+            variant: "destructive",
+          });
+        }
+      }
+    }
+  };
+
+  const handleCopyRecipe = async () => {
+    const text = formatRecipeText(false);
     
     try {
       await navigator.clipboard.writeText(text);
@@ -125,22 +177,62 @@ export const RecipeCard = ({ recipe, onDelete }: RecipeCardProps) => {
             </div>
           </div>
           <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleShareWhatsApp}
-              title="Compartilhar no WhatsApp"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleCopyRecipe}
-              title="Copiar receita"
-            >
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  title="Compartilhar receita"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {typeof navigator !== 'undefined' && navigator.share && (
+                  <>
+                    <DropdownMenuItem onClick={handleNativeShare}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Compartilhar
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                
+                <DropdownMenuItem onClick={handleShareWhatsApp}>
+                  <MessageCircle className="h-4 w-4 mr-2 text-green-500" />
+                  WhatsApp
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={handleShareTelegram}>
+                  <Send className="h-4 w-4 mr-2 text-blue-500" />
+                  Telegram
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={handleShareEmail}>
+                  <Mail className="h-4 w-4 mr-2 text-orange-500" />
+                  Email
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={handleShareTwitter}>
+                  <Twitter className="h-4 w-4 mr-2 text-sky-500" />
+                  Twitter/X
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={handleShareFacebook}>
+                  <Facebook className="h-4 w-4 mr-2 text-blue-600" />
+                  Facebook
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={handleCopyRecipe}>
+                  {copied ? <Check className="h-4 w-4 mr-2 text-green-500" /> : <Copy className="h-4 w-4 mr-2" />}
+                  {copied ? 'Copiado!' : 'Copiar texto'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
