@@ -17,6 +17,7 @@ import { MuscleGroupCard } from "@/components/MuscleGroupCard";
 import { MuscleGroupDetailModal } from "@/components/MuscleGroupDetailModal";
 import { BulkGifUploader } from "@/components/BulkGifUploader";
 import { WorkoutRecommendations } from "@/components/WorkoutRecommendations";
+import { PopulateSubdivisions } from "@/components/PopulateSubdivisions";
 import { useNavigate } from "react-router-dom";
 
 // Import muscle group icons
@@ -555,6 +556,7 @@ export default function Workouts() {
             />
           </TabsContent>
         </Tabs>
+        <PopulateSubdivisions />
       </div>
     </Layout>
   );
