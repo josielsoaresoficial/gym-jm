@@ -3,7 +3,7 @@ import { GymCard } from "@/components/GymCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Camera, Upload, Utensils, Target, Zap, Plus, Clock, TrendingUp, X, ChefHat, Search } from "lucide-react";
+import { Camera, Upload, Utensils, Target, Zap, Plus, Clock, TrendingUp, X, ChefHat, Search, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/untyped";
@@ -17,6 +17,17 @@ import { useFavoriteRecipes } from "@/hooks/useFavoriteRecipes";
 import { RecipeCard } from "@/components/RecipeCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Nutrition = () => {
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
@@ -121,6 +132,33 @@ const Nutrition = () => {
     }
   };
   
+  const handleDeleteMeal = async (mealId: string) => {
+    try {
+      const { error } = await supabase
+        .from('meals')
+        .delete()
+        .eq('id', mealId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setSavedMeals(prev => prev.filter(meal => meal.id !== mealId));
+      
+      toast({
+        title: "Refeição excluída",
+        description: "A refeição foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir refeição:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a refeição. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadNutritionGoals();
     loadTodayMeals();
@@ -844,6 +882,38 @@ const Nutrition = () => {
                           <Button variant="outline" size="sm">
                             Duplicar
                           </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir refeição?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. A refeição "{meal.meal_name || 'Refeição'}" 
+                                  será permanentemente removida do seu histórico.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteMeal(meal.id)}
+                                  className="bg-red-500 hover:bg-red-600"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     )}
