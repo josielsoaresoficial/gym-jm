@@ -55,7 +55,7 @@ const Nutrition = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { recipes, isLoading: isLoadingRecipes, deleteRecipe, saveRecipe: saveFavoriteRecipe } = useFavoriteRecipes();
+  const { recipes, isLoading: isLoadingRecipes, deleteRecipe, updateRecipe, saveRecipe: saveFavoriteRecipe } = useFavoriteRecipes();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -1109,6 +1109,7 @@ const Nutrition = () => {
                         key={recipe.id}
                         recipe={recipe}
                         onDelete={deleteRecipe}
+                        onEdit={updateRecipe}
                       />
                     ))}
                 </div>

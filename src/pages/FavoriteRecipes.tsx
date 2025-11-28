@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 export default function FavoriteRecipes() {
-  const { recipes, isLoading, deleteRecipe } = useFavoriteRecipes();
+  const { recipes, isLoading, deleteRecipe, updateRecipe } = useFavoriteRecipes();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTagFilter, setSelectedTagFilter] = useState<string>('all');
@@ -149,6 +149,7 @@ export default function FavoriteRecipes() {
                     key={recipe.id}
                     recipe={recipe}
                     onDelete={deleteRecipe}
+                    onEdit={updateRecipe}
                   />
                 ))}
               </div>

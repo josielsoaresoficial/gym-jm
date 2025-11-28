@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Users, Share2, Copy, Check, Mail, MessageCircle, Twitter, Facebook, Send } from 'lucide-react';
+import { Trash2, Clock, Users, Share2, Copy, Check, Mail, MessageCircle, Twitter, Facebook, Send, Pencil } from 'lucide-react';
 import { FavoriteRecipe, RecipeCategory } from '@/hooks/useFavoriteRecipes';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -23,14 +23,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { EditRecipeDialog } from '@/components/EditRecipeDialog';
 
 interface RecipeCardProps {
   recipe: FavoriteRecipe;
   onDelete: (id: string) => void;
+  onEdit: (recipeId: string, updates: Partial<FavoriteRecipe>) => Promise<void>;
 }
 
-export const RecipeCard = ({ recipe, onDelete }: RecipeCardProps) => {
+export const RecipeCard = ({ recipe, onDelete, onEdit }: RecipeCardProps) => {
   const [copied, setCopied] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const categoryLabels: Record<RecipeCategory, string> = {
@@ -177,6 +180,14 @@ export const RecipeCard = ({ recipe, onDelete }: RecipeCardProps) => {
             </div>
           </div>
           <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsEditDialogOpen(true)}
+              title="Editar receita"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -319,6 +330,13 @@ export const RecipeCard = ({ recipe, onDelete }: RecipeCardProps) => {
           </div>
         )}
       </CardContent>
+
+      <EditRecipeDialog
+        recipe={recipe}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={onEdit}
+      />
     </Card>
   );
 };
