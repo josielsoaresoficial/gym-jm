@@ -55,7 +55,7 @@ const Nutrition = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { recipes, isLoading: isLoadingRecipes, deleteRecipe } = useFavoriteRecipes();
+  const { recipes, isLoading: isLoadingRecipes, deleteRecipe, saveRecipe: saveFavoriteRecipe } = useFavoriteRecipes();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -515,6 +515,61 @@ const Nutrition = () => {
 
   const openSuggestedRecipes = () => {
     setShowRecipesDialog(true);
+  };
+
+  const mapCategoryToEnglish = (category: string): 'breakfast' | 'lunch' | 'dinner' | 'post_workout' | 'snack' => {
+    const categoryMap: Record<string, 'breakfast' | 'lunch' | 'dinner' | 'post_workout' | 'snack'> = {
+      'Café da Manhã': 'breakfast',
+      'Almoço': 'lunch',
+      'Jantar': 'dinner',
+      'Pós-Treino': 'post_workout',
+      'Lanche': 'snack',
+    };
+    return categoryMap[category] || 'snack';
+  };
+
+  const handleSaveSuggestedRecipe = async () => {
+    if (!selectedSuggestedRecipe) return;
+    
+    // Converter ingredients de string[] para { item: string; quantity: string }[]
+    const formattedIngredients = selectedSuggestedRecipe.ingredients?.map((ing: string) => {
+      // Tentar extrair quantidade do início do ingrediente
+      const match = ing.match(/^([\d.,/]+\s*(?:g|kg|ml|l|xícara|colher|unidade|fatia|dente|pitada|a gosto)?s?\s*(?:de\s)?)/i);
+      if (match) {
+        return {
+          quantity: match[1].trim(),
+          item: ing.replace(match[1], '').trim()
+        };
+      }
+      return { item: ing, quantity: '' };
+    }) || [];
+
+    // Converter instructions de string[] para string único
+    const formattedInstructions = selectedSuggestedRecipe.instructions?.join('\n') || '';
+
+    // Preparar objeto para salvar
+    const recipeToSave = {
+      title: selectedSuggestedRecipe.title,
+      ingredients: formattedIngredients,
+      instructions: formattedInstructions,
+      macros: {
+        calories: selectedSuggestedRecipe.calories,
+        protein: selectedSuggestedRecipe.protein,
+        carbs: selectedSuggestedRecipe.carbs,
+        fat: selectedSuggestedRecipe.fat,
+      },
+      servings: selectedSuggestedRecipe.servings,
+      prep_time: selectedSuggestedRecipe.prepTime,
+      notes: selectedSuggestedRecipe.description,
+      category: mapCategoryToEnglish(selectedSuggestedRecipe.category),
+      tags: [] as string[],
+    };
+
+    const saved = await saveFavoriteRecipe(recipeToSave);
+    
+    if (saved) {
+      setShowRecipeDetailModal(false);
+    }
   };
 
   return (
@@ -1371,13 +1426,7 @@ const Nutrition = () => {
               <Button
                 variant="nutrition"
                 className="w-full"
-                onClick={() => {
-                  toast({
-                    title: "Receita salva!",
-                    description: "Adicionada às suas receitas favoritas",
-                  });
-                  setShowRecipeDetailModal(false);
-                }}
+                onClick={handleSaveSuggestedRecipe}
               >
                 Salvar nas Favoritas
               </Button>
