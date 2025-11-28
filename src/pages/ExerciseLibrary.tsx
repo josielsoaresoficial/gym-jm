@@ -70,8 +70,33 @@ const ExerciseLibrary = () => {
     navigate(`/exercise/${exerciseId}`);
   };
 
-  const startWorkout = (exerciseId: string) => {
-    navigate(`/workout-player/${exerciseId}`);
+  const startWorkout = (exercise: any) => {
+    // Criar um mini-treino com apenas este exercício
+    const singleExerciseWorkout = {
+      id: `single-${exercise.id}`,
+      name: exercise.name,
+      focus: exercise.muscle_group,
+      duration: "15-20 min",
+      exercises: [
+        {
+          id: exercise.id,
+          name: exercise.name,
+          sets: exercise.sets || 3,
+          reps: exercise.reps || "10-12",
+          restTime: exercise.rest_time || 60,
+          muscleGroup: exercise.muscle_group,
+          type: 'principal',
+          equipment: exercise.equipment || [],
+          instructions: exercise.instructions || [],
+          animation: exercise.gif_url || exercise.name
+        }
+      ]
+    };
+    
+    // Navegar para WorkoutSession passando o treino via state
+    navigate('/workout-session', { 
+      state: { workout: singleExerciseWorkout } 
+    });
   };
 
   return (
@@ -153,7 +178,7 @@ const ExerciseLibrary = () => {
                       )}
                       <div className="absolute top-3 right-3 flex gap-2">
                         <button
-                          onClick={() => startWorkout(exercise.id)}
+                          onClick={() => startWorkout(exercise)}
                           className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 shadow-lg transition-colors"
                           title="Iniciar Exercício"
                         >
