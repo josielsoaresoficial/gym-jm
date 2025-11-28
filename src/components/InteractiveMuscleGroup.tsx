@@ -176,7 +176,7 @@ export function InteractiveMuscleGroup({
                   {/* Preview da Animação */}
                   <div className="w-24 h-24 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <AnimatedExercise 
-                      animation={exercise.animation}
+                      animation={exercise.name}
                       size="small"
                     />
                   </div>

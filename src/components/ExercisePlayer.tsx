@@ -80,7 +80,7 @@ const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
             </div>
           </div>
         ) : (
-          <AnimatedExercise animation={exercise.animation} size="large" />
+          <AnimatedExercise animation={exercise.name} size="large" />
         )}
       </div>
 

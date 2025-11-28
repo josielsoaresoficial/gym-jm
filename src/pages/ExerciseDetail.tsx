@@ -163,7 +163,7 @@ const ExerciseDetail = () => {
                       className="w-32 h-32 object-cover rounded-lg"
                     />
                   ) : (
-                    <AnimatedExercise animation={exercise.animation} size="large" />
+                    <AnimatedExercise animation={exercise.name} size="large" />
                   )}
                 </div>
               </div>
