@@ -21,13 +21,10 @@ serve(async (req) => {
       );
     }
 
-    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
-    if (!GOOGLE_AI_API_KEY) {
-      throw new Error('GOOGLE_AI_API_KEY não configurada');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY não configurada');
     }
-
-    // Extract image data (remove data:image/gif;base64, prefix if present)
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
     const systemPrompt = `Você é um especialista em exercícios físicos. Analise esta imagem/GIF de exercício e identifique:
 
@@ -55,46 +52,55 @@ Responda APENAS com um JSON no seguinte formato:
     console.log('Analisando exercício:', fileName);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`,
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: systemPrompt },
-              {
-                inline_data: {
-                  mime_type: "image/gif",
-                  data: base64Data
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { 
+              role: 'user', 
+              content: [
+                { type: 'text', text: systemPrompt },
+                { 
+                  type: 'image_url',
+                  image_url: { url: imageBase64 }
                 }
-              }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1024,
-          }
+              ]
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1024,
         }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro da API do Google:', errorText);
-      throw new Error(`Erro na API do Google: ${response.status}`);
+      console.error('Erro da Lovable AI:', errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit excedido. Aguarde alguns segundos.');
+      }
+      if (response.status === 402) {
+        throw new Error('Créditos insuficientes. Adicione créditos ao seu workspace.');
+      }
+      
+      throw new Error(`Erro na Lovable AI: ${response.status}`);
     }
 
     const data = await response.json();
     console.log('Resposta da IA recebida');
 
-    if (!data.candidates || data.candidates.length === 0) {
+    if (!data.choices || data.choices.length === 0) {
       throw new Error('Nenhuma resposta da IA');
     }
 
-    const text = data.candidates[0].content.parts[0].text;
+    const text = data.choices[0].message.content;
     console.log('Texto da resposta:', text);
 
     // Extract JSON from the response (it might be wrapped in markdown code blocks)
