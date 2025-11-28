@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Filter, Database, Upload, Plus, Sparkles, RefreshCw } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Search, Filter, Database, Upload, Plus, Sparkles, RefreshCw, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/untyped';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,6 +43,8 @@ const ExerciseManagement: React.FC = () => {
   const [validationUploadOpen, setValidationUploadOpen] = useState(false);
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [rebuildConfirmOpen, setRebuildConfirmOpen] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
 
   const muscleGroups = [
     { value: 'all', label: 'Todos os Grupos' },
@@ -144,6 +147,53 @@ const ExerciseManagement: React.FC = () => {
     }
   };
 
+  const handleRebuildLibrary = async () => {
+    if (!session) {
+      toast.error('Você precisa estar logado');
+      return;
+    }
+
+    try {
+      setRebuilding(true);
+      setRebuildConfirmOpen(false);
+      toast.loading('Reconstruindo biblioteca...', { id: 'rebuild-library' });
+
+      const { data, error } = await supabase.functions.invoke('rebuild-exercise-library', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      const result = data;
+      if (result?.success) {
+        const stats = result.stats;
+        let message = `Biblioteca reconstruída! ${stats.created} exercícios criados`;
+        
+        if (stats.failed > 0) {
+          message += `, ${stats.failed} falharam`;
+        }
+
+        toast.success(message, { id: 'rebuild-library', duration: 5000 });
+        
+        // Mostrar distribuição por grupo muscular
+        if (stats.byMuscleGroup) {
+          console.log('Distribuição por grupo muscular:', stats.byMuscleGroup);
+        }
+
+        fetchExercises();
+      } else {
+        throw new Error(result?.error || 'Erro desconhecido');
+      }
+    } catch (error) {
+      console.error('Erro ao reconstruir biblioteca:', error);
+      toast.error('Erro ao reconstruir biblioteca', { id: 'rebuild-library' });
+    } finally {
+      setRebuilding(false);
+    }
+  };
+
   const filteredExercises = exercises.filter((exercise) => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMuscleGroup = selectedMuscleGroup === 'all' || exercise.muscle_group === selectedMuscleGroup;
@@ -179,6 +229,15 @@ const ExerciseManagement: React.FC = () => {
               >
                 <Plus className="w-4 h-4" />
                 Novo Exercício
+              </Button>
+              <Button 
+                onClick={() => setRebuildConfirmOpen(true)}
+                disabled={rebuilding}
+                variant="destructive"
+                className="flex items-center gap-2"
+              >
+                <Trash2 className={`w-4 h-4 ${rebuilding ? 'animate-spin' : ''}`} />
+                {rebuilding ? 'Reconstruindo...' : 'Reconstruir Biblioteca'}
               </Button>
               <Button 
                 onClick={handleSyncGifs}
@@ -366,6 +425,38 @@ const ExerciseManagement: React.FC = () => {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Rebuild Library Confirmation Dialog */}
+        <AlertDialog open={rebuildConfirmOpen} onOpenChange={setRebuildConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="w-5 h-5" />
+                Reconstruir Biblioteca de Exercícios?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p className="font-semibold">⚠️ ATENÇÃO: Esta é uma operação DESTRUTIVA!</p>
+                <p>Esta ação irá:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Deletar TODOS os {exercises.length} exercícios existentes</li>
+                  <li>Criar novos exercícios automaticamente a partir dos GIFs no storage</li>
+                  <li>Detectar nomes e grupos musculares baseado nos arquivos</li>
+                  <li>Definir valores padrão para sets, reps e rest_time</li>
+                </ul>
+                <p className="text-destructive font-medium mt-4">Esta ação NÃO PODE ser desfeita!</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRebuildLibrary}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Sim, Reconstruir Biblioteca
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
