@@ -3,6 +3,16 @@ import { Search, Play, Info, Dumbbell, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
+import chestIcon from "@/assets/muscle-icons/chest-icon.png";
+import backIcon from "@/assets/muscle-icons/back-icon.png";
+import shouldersIcon from "@/assets/muscle-icons/shoulders-icon.png";
+import bicepsIcon from "@/assets/muscle-icons/biceps-icon.png";
+import tricepsIcon from "@/assets/muscle-icons/triceps-icon.png";
+import forearmIcon from "@/assets/muscle-icons/forearm-icon.png";
+import legsIcon from "@/assets/muscle-icons/legs-icon.png";
+import glutesIcon from "@/assets/muscle-icons/glutes-icon.png";
+import absIcon from "@/assets/muscle-icons/abs-icon.png";
+import cardioIcon from "@/assets/muscle-icons/cardio-icon.png";
 
 const ExerciseLibrary = () => {
   const navigate = useNavigate();
@@ -13,18 +23,18 @@ const ExerciseLibrary = () => {
 
   // Grupos musculares
   const muscleGroups = [
-    { id: 'peito', name: 'Peitoral', icon: '🦾' },
-    { id: 'costas', name: 'Costas', icon: '💪' },
-    { id: 'ombros', name: 'Ombros', icon: '👔' },
-    { id: 'biceps', name: 'Bíceps', icon: '💪' },
-    { id: 'triceps', name: 'Tríceps', icon: '🎯' },
-    { id: 'pernas', name: 'Pernas', icon: '🦵' },
-    { id: 'gluteos', name: 'Glúteos', icon: '🍑' },
-    { id: 'abdomen', name: 'Abdômen', icon: '🎗️' },
-    { id: 'antebraco', name: 'Antebraço', icon: '💪' },
-    { id: 'adutores', name: 'Adutores', icon: '🦵' },
-    { id: 'cardio', name: 'Cardio', icon: '❤️' },
-    { id: 'outros', name: 'Outros', icon: '🏋️' }
+    { id: 'peito', name: 'Peitoral', icon: chestIcon },
+    { id: 'costas', name: 'Costas', icon: backIcon },
+    { id: 'ombros', name: 'Ombros', icon: shouldersIcon },
+    { id: 'biceps', name: 'Bíceps', icon: bicepsIcon },
+    { id: 'triceps', name: 'Tríceps', icon: tricepsIcon },
+    { id: 'pernas', name: 'Pernas', icon: legsIcon },
+    { id: 'gluteos', name: 'Glúteos', icon: glutesIcon },
+    { id: 'abdomen', name: 'Abdômen', icon: absIcon },
+    { id: 'antebraco', name: 'Antebraço', icon: forearmIcon },
+    { id: 'adutores', name: 'Adutores', icon: legsIcon },
+    { id: 'cardio', name: 'Cardio', icon: cardioIcon },
+    { id: 'outros', name: 'Outros', icon: null }
   ];
 
   // Buscar exercícios do Supabase
@@ -108,7 +118,13 @@ const ExerciseLibrary = () => {
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <span className="text-2xl mb-1">{group.icon}</span>
+                <div className="w-8 h-8 mb-1">
+                  {group.icon ? (
+                    <img src={group.icon} alt={group.name} className="w-full h-full object-contain" />
+                  ) : (
+                    <Dumbbell className="w-full h-full text-muted-foreground" />
+                  )}
+                </div>
                 <span className="text-xs font-medium">{group.name}</span>
               </button>
             ))}
