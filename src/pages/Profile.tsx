@@ -523,11 +523,11 @@ const Profile = () => {
         >
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <Bell className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Bell className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm md:text-base">Notificações de treino</div>
-                  <div className="text-xs md:text-sm text-muted-foreground break-words">Lembretes diários para se exercitar</div>
+                  <div className="font-medium text-base">Notificações de treino</div>
+                  <div className="text-sm text-muted-foreground break-words">Lembretes diários para se exercitar</div>
                 </div>
               </div>
               <Switch 
@@ -537,11 +537,11 @@ const Profile = () => {
               />
             </div>
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <Target className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Target className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm md:text-base">Metas automáticas</div>
-                  <div className="text-xs md:text-sm text-muted-foreground break-words">Ajuste automático baseado no progresso</div>
+                  <div className="font-medium text-base">Metas automáticas</div>
+                  <div className="text-sm text-muted-foreground break-words">Ajuste automático baseado no progresso</div>
                 </div>
               </div>
               <Switch 
@@ -551,11 +551,11 @@ const Profile = () => {
               />
             </div>
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <Smartphone className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Smartphone className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm md:text-base">Análise por IA</div>
-                  <div className="text-xs md:text-sm text-muted-foreground break-words">Análise automática de refeições por foto</div>
+                  <div className="font-medium text-base">Análise por IA</div>
+                  <div className="text-sm text-muted-foreground break-words">Análise automática de refeições por foto</div>
                 </div>
               </div>
               <Switch 
@@ -565,11 +565,11 @@ const Profile = () => {
               />
             </div>
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <Globe className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Globe className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm md:text-base">Compartilhamento de dados</div>
-                  <div className="text-xs md:text-sm text-muted-foreground break-words">Me permite compartilhar progresso com a comunidade</div>
+                  <div className="font-medium text-base">Compartilhamento de dados</div>
+                  <div className="text-sm text-muted-foreground break-words">Me permite compartilhar progresso com a comunidade</div>
                 </div>
               </div>
               <Switch 
