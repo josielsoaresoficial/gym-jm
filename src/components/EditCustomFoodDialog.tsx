@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { CustomFood } from "@/hooks/useCustomFoods";
 
-interface AddCustomFoodDialogProps {
+interface EditCustomFoodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  food: CustomFood | null;
+  onUpdate: (id: string, updates: Partial<CustomFood>) => Promise<boolean>;
 }
 
 const CATEGORIES = [
@@ -28,8 +28,7 @@ const CATEGORIES = [
   { value: "outros", label: "Outros" },
 ];
 
-export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustomFoodDialogProps) {
-  const { toast } = useToast();
+export function EditCustomFoodDialog({ open, onOpenChange, food, onUpdate }: EditCustomFoodDialogProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -42,98 +41,53 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
     notes: "",
   });
 
+  useEffect(() => {
+    if (food) {
+      setFormData({
+        name: food.name,
+        calories: food.calories.toString(),
+        protein: food.protein.toString(),
+        carbs: food.carbs.toString(),
+        fat: food.fat.toString(),
+        portion: food.portion,
+        category: food.category || "outros",
+        notes: food.notes || "",
+      });
+    }
+  }, [food]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validação
-    if (!formData.name.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome do alimento é obrigatório",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!food) return;
 
     const calories = parseInt(formData.calories);
     const protein = parseFloat(formData.protein);
     const carbs = parseFloat(formData.carbs);
     const fat = parseFloat(formData.fat);
 
-    if (isNaN(calories) || calories < 0) {
-      toast({
-        title: "Erro",
-        description: "Calorias deve ser um número válido maior ou igual a 0",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isNaN(protein) || protein < 0 || isNaN(carbs) || carbs < 0 || isNaN(fat) || fat < 0) {
-      toast({
-        title: "Erro",
-        description: "Proteínas, carboidratos e gorduras devem ser números válidos maiores ou iguais a 0",
-        variant: "destructive",
-      });
+    if (isNaN(calories) || calories < 0 || isNaN(protein) || protein < 0 || 
+        isNaN(carbs) || carbs < 0 || isNaN(fat) || fat < 0) {
       return;
     }
 
     setLoading(true);
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado",
-          variant: "destructive",
-        });
-        return;
-      }
+    const success = await onUpdate(food.id, {
+      name: formData.name.trim(),
+      calories,
+      protein,
+      carbs,
+      fat,
+      portion: formData.portion.trim() || "100g",
+      category: formData.category,
+      notes: formData.notes.trim() || null,
+    });
 
-      const { error } = await supabase.from("custom_foods").insert({
-        user_id: user.id,
-        name: formData.name.trim(),
-        calories,
-        protein,
-        carbs,
-        fat,
-        portion: formData.portion.trim() || "100g",
-        category: formData.category,
-        notes: formData.notes.trim() || null,
-      });
+    setLoading(false);
 
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Alimento personalizado adicionado com sucesso",
-      });
-
-      // Reset form
-      setFormData({
-        name: "",
-        calories: "",
-        protein: "",
-        carbs: "",
-        fat: "",
-        portion: "100g",
-        category: "outros",
-        notes: "",
-      });
-
+    if (success) {
       onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Erro ao adicionar alimento:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o alimento",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -141,17 +95,17 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Alimento Personalizado</DialogTitle>
+          <DialogTitle>Editar Alimento</DialogTitle>
           <DialogDescription>
-            Cadastre um novo alimento com suas informações nutricionais
+            Modifique as informações do alimento personalizado
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome do Alimento *</Label>
+            <Label htmlFor="edit-name">Nome do Alimento *</Label>
             <Input
-              id="name"
+              id="edit-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Bolo de chocolate caseiro"
@@ -161,12 +115,12 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
+            <Label htmlFor="edit-category">Categoria *</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
-              <SelectTrigger id="category">
+              <SelectTrigger id="edit-category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -181,9 +135,9 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="calories">Calorias (kcal) *</Label>
+              <Label htmlFor="edit-calories">Calorias (kcal) *</Label>
               <Input
-                id="calories"
+                id="edit-calories"
                 type="number"
                 min="0"
                 step="1"
@@ -195,9 +149,9 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="portion">Porção *</Label>
+              <Label htmlFor="edit-portion">Porção *</Label>
               <Input
-                id="portion"
+                id="edit-portion"
                 value={formData.portion}
                 onChange={(e) => setFormData({ ...formData, portion: e.target.value })}
                 placeholder="100g"
@@ -211,11 +165,11 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
             <Label>Macronutrientes (g) *</Label>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="protein" className="text-xs text-muted-foreground">
+                <Label htmlFor="edit-protein" className="text-xs text-muted-foreground">
                   Proteínas
                 </Label>
                 <Input
-                  id="protein"
+                  id="edit-protein"
                   type="number"
                   min="0"
                   step="0.1"
@@ -227,11 +181,11 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
               </div>
 
               <div>
-                <Label htmlFor="carbs" className="text-xs text-muted-foreground">
+                <Label htmlFor="edit-carbs" className="text-xs text-muted-foreground">
                   Carboidratos
                 </Label>
                 <Input
-                  id="carbs"
+                  id="edit-carbs"
                   type="number"
                   min="0"
                   step="0.1"
@@ -243,11 +197,11 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
               </div>
 
               <div>
-                <Label htmlFor="fat" className="text-xs text-muted-foreground">
+                <Label htmlFor="edit-fat" className="text-xs text-muted-foreground">
                   Gorduras
                 </Label>
                 <Input
-                  id="fat"
+                  id="edit-fat"
                   type="number"
                   min="0"
                   step="0.1"
@@ -261,9 +215,9 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notas (opcional)</Label>
+            <Label htmlFor="edit-notes">Notas (opcional)</Label>
             <Textarea
-              id="notes"
+              id="edit-notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Ex: Receita da vovó, versão sem lactose..."
@@ -289,7 +243,7 @@ export function AddCustomFoodDialog({ open, onOpenChange, onSuccess }: AddCustom
                   Salvando...
                 </>
               ) : (
-                "Adicionar"
+                "Salvar Alterações"
               )}
             </Button>
           </div>

@@ -31,6 +31,7 @@ import FavoriteRecipes from "./pages/FavoriteRecipes";
 import ExerciseStats from "./pages/ExerciseStats";
 import WorkoutHistory from "./pages/WorkoutHistory";
 import CustomWorkouts from "./pages/CustomWorkouts";
+import CustomFoods from "./pages/CustomFoods";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +77,7 @@ const App = () => {
           <Route path="/exercise-stats" element={<ExerciseStats />} />
           <Route path="/workout-history" element={<WorkoutHistory />} />
           <Route path="/custom-workouts" element={<CustomWorkouts />} />
+          <Route path="/custom-foods" element={<CustomFoods />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

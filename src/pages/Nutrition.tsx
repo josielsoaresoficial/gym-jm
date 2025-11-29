@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Camera, Upload, Utensils, Target, Zap, Plus, Clock, TrendingUp, X, ChefHat, Search, Trash2, RefreshCw, UtensilsCrossed } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/untyped";
 import NutriAI from "@/components/NutriAI";
@@ -33,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddCustomFoodDialog } from "@/components/AddCustomFoodDialog";
 
 const Nutrition = () => {
+  const navigate = useNavigate();
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [editingMeal, setEditingMeal] = useState<any>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -1044,14 +1046,24 @@ const Nutrition = () => {
                 </h2>
                 <p className="text-muted-foreground">Suas receitas favoritas do NutriAI</p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCustomFoodDialog(true)}
-                className="gap-2"
-              >
-                <UtensilsCrossed className="h-4 w-4" />
-                Adicionar Alimento
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/custom-foods')}
+                  className="gap-2"
+                >
+                  <UtensilsCrossed className="h-4 w-4" />
+                  Gerenciar Alimentos
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCustomFoodDialog(true)}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Novo Alimento
+                </Button>
+              </div>
             </div>
 
             {/* Search Bar */}
