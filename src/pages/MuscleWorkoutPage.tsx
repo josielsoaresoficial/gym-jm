@@ -22,36 +22,6 @@ interface Exercise {
   equipment: any;
 }
 
-// Mapeamento de grupos musculares da UI para grupos do banco de dados
-const muscleGroupMapping: Record<string, string[]> = {
-  // Vista Frontal
-  'quadriceps': ['pernas'],
-  'peitoral': ['peito'],
-  'obliquos': ['abdomen'],
-  'abdutores': ['pernas'],
-  'antebracos': ['antebraco'],
-  
-  // Vista Traseira
-  'trapezio': ['costas'],
-  'dorsais': ['costas'],
-  'lombares': ['costas'],
-  'isquiotibiais': ['pernas'],
-  'panturrilhas': ['pernas'],
-  
-  // Grupos que já funcionam corretamente
-  'ombros': ['ombros'],
-  'biceps': ['biceps'],
-  'triceps': ['triceps'],
-  'abdomen': ['abdomen'],
-  'adutores': ['adutores'],
-  'gluteos': ['gluteos'],
-  'cardio': ['cardio'],
-  'peito': ['peito'],
-  'pernas': ['pernas'],
-  'costas': ['costas'],
-  'antebraco': ['antebraco'],
-};
-
 // Mapeamento de nomes de músculos para títulos e descrições
 const muscleTitles: Record<string, { title: string; description: string }> = {
   ombros: {
@@ -63,10 +33,6 @@ const muscleTitles: Record<string, { title: string; description: string }> = {
     description: "Exercícios especializados para desenvolvimento e tonificação dos glúteos."
   },
   peito: {
-    title: "Treino de Peitoral",
-    description: "Exercícios para desenvolvimento do peitoral superior, medial e inferior."
-  },
-  peitoral: {
     title: "Treino de Peitoral",
     description: "Exercícios para desenvolvimento do peitoral superior, medial e inferior."
   },
@@ -82,56 +48,20 @@ const muscleTitles: Record<string, { title: string; description: string }> = {
     title: "Treino de Abdômen",
     description: "Exercícios para fortalecimento do core, reto abdominal e oblíquos."
   },
-  obliquos: {
-    title: "Treino de Oblíquos",
-    description: "Exercícios focados no fortalecimento dos oblíquos e core lateral."
-  },
   pernas: {
     title: "Treino de Pernas",
     description: "Exercícios completos para quadríceps, posterior de coxa e panturrilhas."
-  },
-  quadriceps: {
-    title: "Treino de Quadríceps",
-    description: "Exercícios focados no desenvolvimento da parte frontal das coxas."
-  },
-  isquiotibiais: {
-    title: "Treino de Posteriores de Coxa",
-    description: "Exercícios para fortalecimento dos isquiotibiais e posteriores de coxa."
-  },
-  panturrilhas: {
-    title: "Treino de Panturrilhas",
-    description: "Exercícios para desenvolvimento das panturrilhas e gastrocnêmio."
   },
   costas: {
     title: "Treino de Costas",
     description: "Exercícios para desenvolvimento de largura e espessura das dorsais."
   },
-  dorsais: {
-    title: "Treino de Dorsais",
-    description: "Exercícios para desenvolvimento da largura das dorsais."
-  },
-  trapezio: {
-    title: "Treino de Trapézio",
-    description: "Exercícios para fortalecimento e desenvolvimento do trapézio."
-  },
-  lombares: {
-    title: "Treino de Lombares",
-    description: "Exercícios para fortalecimento da região lombar e proteção da coluna."
-  },
   adutores: {
     title: "Treino de Adutores",
     description: "Exercícios focados no fortalecimento da parte interna das coxas."
   },
-  abdutores: {
-    title: "Treino de Abdutores",
-    description: "Exercícios focados no fortalecimento da parte externa das coxas e quadril."
-  },
   antebraco: {
     title: "Treino de Antebraço",
-    description: "Exercícios para desenvolvimento de força de pegada e antebraços."
-  },
-  antebracos: {
-    title: "Treino de Antebraços",
     description: "Exercícios para desenvolvimento de força de pegada e antebraços."
   },
   cardio: {
@@ -153,13 +83,10 @@ export default function MuscleWorkoutPage() {
 
       setLoading(true);
       try {
-        // Mapear o nome do grupo muscular da UI para os grupos do banco de dados
-        const dbMuscleGroups = muscleGroupMapping[muscleName] || [muscleName];
-
         const { data, error } = await supabase
           .from('exercise_library')
           .select('*')
-          .in('muscle_group', dbMuscleGroups)
+          .eq('muscle_group', muscleName)
           .order('name');
 
         if (error) throw error;
