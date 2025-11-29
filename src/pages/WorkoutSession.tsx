@@ -27,7 +27,29 @@ const WorkoutSession: React.FC = () => {
   useEffect(() => {
     // Try to get workout from location state first (from direct navigation)
     if (location.state?.workout) {
-      setWorkout(location.state.workout);
+      const receivedWorkout = location.state.workout;
+      
+      // Normalizar estrutura de dados para garantir compatibilidade
+      const normalizedWorkout: WorkoutDay = {
+        id: receivedWorkout.id,
+        name: receivedWorkout.name,
+        focus: receivedWorkout.description || receivedWorkout.focus || '',
+        duration: receivedWorkout.duration || `${receivedWorkout.duration_minutes || 30}min`,
+        exercises: (receivedWorkout.exercises || receivedWorkout.exercises_data || []).map((ex: any) => ({
+          id: ex.id,
+          name: ex.name,
+          type: ex.type || 'principal',
+          sets: ex.sets || 3,
+          reps: ex.reps || '10-12',
+          restTime: ex.restTime || ex.rest_time || 60,
+          animation: ex.animation || ex.gif_url || '',
+          instructions: ex.instructions || [],
+          muscleGroup: ex.muscleGroup || ex.muscle_group || '',
+          equipment: ex.equipment || []
+        }))
+      };
+      
+      setWorkout(normalizedWorkout);
     } else if (programId === 'ai-recommendation') {
       // AI recommendations require state - can't reload from storage
       toast.error('Dados do treino perdidos. Gere novas recomendações.');
@@ -60,6 +82,10 @@ const WorkoutSession: React.FC = () => {
   const timerDuration = isResting && currentExercise ? currentExercise.restTime : 0;
 
   const startWorkout = () => {
+    if (!workout?.exercises?.length) {
+      toast.error('Nenhum exercício encontrado no treino');
+      return;
+    }
     setWorkoutStatus('active');
     toast.success('Treino iniciado! Vamos lá! 💪');
   };
