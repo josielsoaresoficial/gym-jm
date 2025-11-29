@@ -8,7 +8,7 @@ export const useVoice = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const speak = async (text: string, voiceProvider: VoiceProvider = 'google-male') => {
+  const speak = async (text: string, voiceProvider: VoiceProvider = 'google-male', onSpeechEnd?: () => void) => {
     if (!text || isPlaying) return;
 
     // Verificar se outra voz já está tocando (previne duplicação)
@@ -112,6 +112,8 @@ export const useVoice = () => {
         utterance.onend = () => {
           setIsPlaying(false);
           sessionStorage.removeItem('voice_playing');
+          onSpeechEnd?.(); // ✅ Notificar que terminou de falar
+          window.dispatchEvent(new Event('speechSynthesisEnded'));
         };
         
         utterance.onerror = (event) => {
@@ -164,6 +166,8 @@ export const useVoice = () => {
         setIsPlaying(false);
         sessionStorage.removeItem('voice_playing');
         URL.revokeObjectURL(url);
+        onSpeechEnd?.(); // ✅ Notificar que terminou de falar
+        window.dispatchEvent(new Event('speechSynthesisEnded'));
       };
       audio.onerror = () => {
         setIsPlaying(false);

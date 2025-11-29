@@ -22,6 +22,7 @@ const NutriAI = () => {
   const [isActive, setIsActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [saveRecipeDialog, setSaveRecipeDialog] = useState(false);
   const [selectedRecipeContent, setSelectedRecipeContent] = useState('');
@@ -128,11 +129,18 @@ const NutriAI = () => {
     };
 
     recognition.onresult = (event: any) => {
-      console.log('🎧 CAPTANDO AUDIO - isPaused:', isPaused, 'isProcessing:', isProcessing);
+      console.log('🎧 CAPTANDO AUDIO - isPaused:', isPaused, 'isAISpeaking:', isAISpeaking, 'isProcessing:', isProcessing);
       
-      // ✅ NÃO PROCESSAR SE ESTIVER PAUSADO
-      if (isPaused) {
-        console.log('⏸️ Reconhecimento pausado, ignorando entrada');
+      // ✅ Cancelar fala anterior se AI ainda está falando
+      if (window.speechSynthesis.speaking) {
+        console.log('🔇 Cancelando fala anterior da AI...');
+        window.speechSynthesis.cancel();
+        setIsAISpeaking(false);
+      }
+      
+      // ✅ NÃO PROCESSAR SE ESTIVER PAUSADO OU AI FALANDO
+      if (isPaused || isAISpeaking) {
+        console.log('⏸️ Reconhecimento pausado ou AI falando, ignorando entrada');
         return;
       }
       
@@ -207,6 +215,58 @@ const NutriAI = () => {
       }
     };
   }, [isActive, isPaused, sendMessage]);
+
+  // ✅ Monitorar quando AI termina de falar e reiniciar reconhecimento
+  useEffect(() => {
+    const handleSpeechEnd = () => {
+      console.log('✅ AI terminou de falar, preparando para ouvir novamente...');
+      setIsAISpeaking(false);
+      
+      // Reiniciar reconhecimento imediatamente após AI terminar
+      if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
+        setTimeout(() => {
+          try {
+            recognitionRef.current.start();
+            console.log('🎤 Reconhecimento reiniciado após AI falar');
+          } catch (e) {
+            console.log('⚠️ Reconhecimento já ativo');
+          }
+        }, 300);
+      }
+    };
+    
+    window.addEventListener('speechSynthesisEnded', handleSpeechEnd);
+    return () => window.removeEventListener('speechSynthesisEnded', handleSpeechEnd);
+  }, [isActive, isPaused]);
+
+  // ✅ Monitorar estado de speechSynthesis continuamente
+  useEffect(() => {
+    const checkSpeaking = () => {
+      const isSpeaking = window.speechSynthesis.speaking;
+      if (isAISpeaking && !isSpeaking) {
+        console.log('✅ speechSynthesis parou, atualizando estado...');
+        setIsAISpeaking(false);
+        
+        // Reiniciar reconhecimento se necessário
+        if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
+          setTimeout(() => {
+            try {
+              recognitionRef.current.start();
+              console.log('🎤 Reconhecimento reiniciado');
+            } catch (e) {
+              console.log('⚠️ Erro ao reiniciar:', e);
+            }
+          }, 500);
+        }
+      } else if (!isAISpeaking && isSpeaking) {
+        setIsAISpeaking(true);
+        console.log('🔊 AI começou a falar, pausando reconhecimento...');
+      }
+    };
+    
+    const interval = setInterval(checkSpeaking, 300);
+    return () => clearInterval(interval);
+  }, [isActive, isPaused, isAISpeaking]);
 
 
 
@@ -359,11 +419,12 @@ const NutriAI = () => {
             ))}
             
               {/* ✅ INDICADOR DE STATUS */}
-              {(isListening || isProcessing || isPaused) && (
+              {(isListening || isProcessing || isPaused || isAISpeaking) && (
                 <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
                   {isPaused && '⏸️ Conversa pausada'}
-                  {!isPaused && isListening && '🎤 Ouvindo... Fale agora!'}
-                  {!isPaused && isProcessing && '🔊 NutriAI processando...'}
+                  {!isPaused && isAISpeaking && '🔊 NutriAI falando...'}
+                  {!isPaused && !isAISpeaking && isListening && '🎤 Ouvindo... Fale agora!'}
+                  {!isPaused && !isAISpeaking && isProcessing && '💭 NutriAI processando...'}
                 </div>
               )}
             </div>
