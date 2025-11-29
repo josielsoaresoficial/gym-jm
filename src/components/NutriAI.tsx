@@ -3,10 +3,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/untyped';
 import { useChat } from '@/hooks/useChat';
 import { VoiceProvider } from '@/hooks/useVoice';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import VoiceSettings from './VoiceSettings';
 import ConversationHistory from './ConversationHistory';
 import { SaveRecipeDialog } from './SaveRecipeDialog';
-import { History, BookmarkPlus } from 'lucide-react';
+import VoiceIndicator from './VoiceIndicator';
+import VoiceTextInput from './VoiceTextInput';
+import { History, BookmarkPlus, Mic, MicOff } from 'lucide-react';
 
 const NutriAI = () => {
   const { user } = useAuth();
@@ -20,17 +23,31 @@ const NutriAI = () => {
     setVoiceProvider 
   } = useChat('google-male'); // ✅ Iniciar com Google como padrão
   const [isActive, setIsActive] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [saveRecipeDialog, setSaveRecipeDialog] = useState(false);
   const [selectedRecipeContent, setSelectedRecipeContent] = useState('');
   const [profileName, setProfileName] = useState<string>('');
-  const recognitionRef = useRef<any>(null);
-  const isRecognitionActive = useRef(false);
-  const interimTranscriptRef = useRef<string>('');
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [useTextInput, setUseTextInput] = useState(false);
+
+  // Hook de reconhecimento de voz melhorado
+  const voiceRecognition = useVoiceRecognition({
+    language: 'pt-BR',
+    continuous: true,
+    silenceTimeout: 1200,
+    enabled: isActive && !isPaused && !isAISpeaking && !useTextInput,
+    onResult: (transcript, confidence) => {
+      console.log('🎤 Voz capturada:', transcript, 'Confiança:', confidence);
+      sendMessage(transcript, true);
+    },
+    onError: (error) => {
+      console.error('❌ Erro de voz:', error);
+      if (error.includes('não suportado') || error.includes('Permissão negada')) {
+        setUseTextInput(true);
+      }
+    }
+  });
 
   // Detectar se uma mensagem contém uma receita
   const isRecipeMessage = (content: string) => {
@@ -87,186 +104,22 @@ const NutriAI = () => {
   const firstName = getFirstName(profileName);
 
 
-  // ✅ CONFIGURAÇÃO AVANÇADA DE VOZ
-  useEffect(() => {
-    console.log('🔧 useEffect reconhecimento - isActive:', isActive, 'isPaused:', isPaused);
-    
-    if (!('webkitSpeechRecognition' in window)) {
-      console.error('❌ webkitSpeechRecognition não disponível neste navegador');
-      return;
-    }
-
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'pt-BR';
-    recognition.maxAlternatives = 3;
-
-    recognition.onstart = () => {
-      console.log('🎤 Reconhecimento de voz INICIADO - Microfone ativo');
-      isRecognitionActive.current = true;
-      setIsListening(true);
-    };
-
-    recognition.onend = () => {
-      console.log('🔇 Reconhecimento parou');
-      isRecognitionActive.current = false;
-      setIsListening(false);
-      
-      // ✅ RECONECTAR AUTOMATICAMENTE se ainda estiver ativo E NÃO PAUSADO
-      if (isActive && !isPaused) {
-        setTimeout(() => {
-          if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
-            try {
-              console.log('🔄 Reiniciando reconhecimento...');
-              recognitionRef.current.start();
-            } catch (e) {
-              console.log('⚠️ Reconhecimento já ativo');
-            }
-          }
-        }, 800);
-      }
-    };
-
-    recognition.onresult = (event: any) => {
-      console.log('🎧 CAPTANDO AUDIO - isPaused:', isPaused, 'isAISpeaking:', isAISpeaking, 'isProcessing:', isProcessing);
-      
-      // ✅ Cancelar fala anterior se AI ainda está falando
-      if (window.speechSynthesis.speaking) {
-        console.log('🔇 Cancelando fala anterior da AI...');
-        window.speechSynthesis.cancel();
-        setIsAISpeaking(false);
-      }
-      
-      // ✅ NÃO PROCESSAR SE ESTIVER PAUSADO OU AI FALANDO
-      if (isPaused || isAISpeaking) {
-        console.log('⏸️ Reconhecimento pausado ou AI falando, ignorando entrada');
-        return;
-      }
-      
-      // Limpar timer anterior
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      
-      let finalTranscript = '';
-      let interimTranscript = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        console.log(`📊 Resultado ${i}: "${transcript}" (final: ${event.results[i].isFinal})`);
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      
-      // Se tiver resultado final, processar imediatamente
-      if (finalTranscript.trim()) {
-        console.log('✅ Texto FINAL capturado:', finalTranscript);
-        interimTranscriptRef.current = '';
-        sendMessage(finalTranscript, true);
-      } else if (interimTranscript.trim()) {
-        // Armazenar resultado intermediário
-        interimTranscriptRef.current = interimTranscript;
-        console.log('💬 Texto INTERMEDIÁRIO armazenado:', interimTranscript);
-        
-        // Se não houver mais fala em 1.5s, processar o resultado intermediário
-        silenceTimerRef.current = setTimeout(() => {
-          if (interimTranscriptRef.current.trim()) {
-            console.log('⏱️ Processando por SILÊNCIO:', interimTranscriptRef.current);
-            sendMessage(interimTranscriptRef.current, true);
-            interimTranscriptRef.current = '';
-          }
-        }, 1500);
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('❌ Erro no reconhecimento:', event.error);
-      isRecognitionActive.current = false;
-      if (event.error === 'not-allowed') {
-        alert('Permissão de microfone negada. Ative o microfone para conversar com o NutriAI.');
-      }
-    };
-
-    recognitionRef.current = recognition;
-    
-    // ✅ INICIAR RECONHECIMENTO SE JÁ ESTÁ ATIVO
-    if (isActive && !isPaused && !isRecognitionActive.current) {
-      setTimeout(() => {
-        try {
-          console.log('▶️ Iniciando reconhecimento de voz automaticamente...');
-          recognition.start();
-        } catch (e) {
-          console.error('❌ Erro ao iniciar reconhecimento:', e);
-        }
-      }, 2500);
-    }
-    
-    return () => {
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-      }
-      if (recognitionRef.current && isRecognitionActive.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [isActive, isPaused, sendMessage]);
-
-  // ✅ Monitorar quando AI termina de falar e reiniciar reconhecimento
-  useEffect(() => {
-    const handleSpeechEnd = () => {
-      console.log('✅ AI terminou de falar, preparando para ouvir novamente...');
-      setIsAISpeaking(false);
-      
-      // Reiniciar reconhecimento imediatamente após AI terminar
-      if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
-        setTimeout(() => {
-          try {
-            recognitionRef.current.start();
-            console.log('🎤 Reconhecimento reiniciado após AI falar');
-          } catch (e) {
-            console.log('⚠️ Reconhecimento já ativo');
-          }
-        }, 300);
-      }
-    };
-    
-    window.addEventListener('speechSynthesisEnded', handleSpeechEnd);
-    return () => window.removeEventListener('speechSynthesisEnded', handleSpeechEnd);
-  }, [isActive, isPaused]);
-
-  // ✅ Monitorar estado de speechSynthesis continuamente
+  // Monitorar quando AI termina de falar
   useEffect(() => {
     const checkSpeaking = () => {
       const isSpeaking = window.speechSynthesis.speaking;
       if (isAISpeaking && !isSpeaking) {
-        console.log('✅ speechSynthesis parou, atualizando estado...');
+        console.log('✅ AI terminou de falar');
         setIsAISpeaking(false);
-        
-        // Reiniciar reconhecimento se necessário
-        if (recognitionRef.current && isActive && !isPaused && !isRecognitionActive.current) {
-          setTimeout(() => {
-            try {
-              recognitionRef.current.start();
-              console.log('🎤 Reconhecimento reiniciado');
-            } catch (e) {
-              console.log('⚠️ Erro ao reiniciar:', e);
-            }
-          }, 500);
-        }
       } else if (!isAISpeaking && isSpeaking) {
+        console.log('🔊 AI começou a falar');
         setIsAISpeaking(true);
-        console.log('🔊 AI começou a falar, pausando reconhecimento...');
       }
     };
     
     const interval = setInterval(checkSpeaking, 300);
     return () => clearInterval(interval);
-  }, [isActive, isPaused, isAISpeaking]);
+  }, [isAISpeaking]);
 
 
 
@@ -280,51 +133,32 @@ const NutriAI = () => {
     console.log('💬 Conversa iniciada, preparando reconhecimento de voz...');
   };
 
-  // ✅ PAUSAR/RETOMAR CONVERSA
+  // Pausar/Retomar conversa
   const togglePause = () => {
     const newPausedState = !isPaused;
     console.log(`${newPausedState ? '⏸️ PAUSANDO' : '▶️ RETOMANDO'} NutriAI`);
     setIsPaused(newPausedState);
-    
-    if (newPausedState) {
-      // PAUSAR - parar o reconhecimento
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-          isRecognitionActive.current = false;
-        } catch (e) {
-          console.log('⚠️ Erro ao parar reconhecimento');
-        }
-      }
-    } else {
-      // RETOMAR - reiniciar o reconhecimento
-      setTimeout(() => {
-        if (recognitionRef.current && !isRecognitionActive.current) {
-          try {
-            recognitionRef.current.start();
-            console.log('✅ Reconhecimento retomado');
-          } catch (e) {
-            console.log('⚠️ Reconhecimento já ativo');
-          }
-        }
-      }, 300);
+  };
+
+  // Desativar NutriAI
+  const deactivateNutriAI = () => {
+    console.log('❌ Desativando NutriAI');
+    setIsActive(false);
+    setIsPaused(false);
+    setUseTextInput(false);
+  };
+
+  // Alternar entre voz e texto
+  const toggleInputMode = () => {
+    setUseTextInput(!useTextInput);
+    if (!useTextInput) {
+      voiceRecognition.stop();
     }
   };
 
-  // ✅ DESATIVAR CORRETAMENTE
-  const deactivateNutriAI = () => {
-    console.log('❌ Desativando NutriAI');
-    if (recognitionRef.current && isRecognitionActive.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        console.log('⚠️ Erro ao parar reconhecimento');
-      }
-    }
-    isRecognitionActive.current = false;
-    setIsActive(false);
-    setIsListening(false);
-    setIsPaused(false);
+  // Enviar mensagem de texto
+  const handleTextMessage = (text: string) => {
+    sendMessage(text, false);
   };
 
 
@@ -366,6 +200,15 @@ const NutriAI = () => {
                   currentVoice={voiceProvider}
                   onVoiceChange={handleVoiceChange}
                 />
+                {voiceRecognition.isSupported && (
+                  <button 
+                    onClick={toggleInputMode}
+                    className="text-white hover:text-green-200 text-base bg-green-600 hover:bg-green-700 w-7 h-7 rounded-full flex items-center justify-center"
+                    title={useTextInput ? 'Usar voz' : 'Usar texto'}
+                  >
+                    {useTextInput ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                  </button>
+                )}
                 <button 
                   onClick={togglePause}
                   className="text-white hover:text-green-200 text-base bg-green-600 hover:bg-green-700 w-7 h-7 rounded-full flex items-center justify-center"
@@ -394,47 +237,79 @@ const NutriAI = () => {
           ) : (
             <div className="h-60 md:h-72 p-3 overflow-y-auto bg-gray-50 dark:bg-gray-950">
               {messages.map((msg, index) => (
-              <div key={index} className={`mb-3 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                <div className={`inline-block max-w-[85%] p-2 rounded-xl text-sm ${
-                  msg.role === 'user' 
-                    ? 'bg-blue-500 text-white rounded-br-none' 
-                    : 'bg-green-100 dark:bg-green-900 text-gray-800 dark:text-gray-100 rounded-bl-none border border-green-200 dark:border-green-700'
-                }`}>
-                  {msg.content}
+                <div key={index} className={`mb-3 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                  <div className={`inline-block max-w-[85%] p-2 rounded-xl text-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-blue-500 text-white rounded-br-none' 
+                      : 'bg-green-100 dark:bg-green-900 text-gray-800 dark:text-gray-100 rounded-bl-none border border-green-200 dark:border-green-700'
+                  }`}>
+                    {msg.content}
+                  </div>
+                  {msg.role === 'assistant' && isRecipeMessage(msg.content) && (
+                    <button
+                      onClick={() => handleSaveRecipe(msg.content)}
+                      className="ml-2 text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md flex items-center gap-1 mt-1 inline-flex"
+                      title="Salvar esta receita"
+                    >
+                      <BookmarkPlus className="h-3 w-3" />
+                      Salvar
+                    </button>
+                  )}
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-                {msg.role === 'assistant' && isRecipeMessage(msg.content) && (
-                  <button
-                    onClick={() => handleSaveRecipe(msg.content)}
-                    className="ml-2 text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md flex items-center gap-1 mt-1 inline-flex"
-                    title="Salvar esta receita"
-                  >
-                    <BookmarkPlus className="h-3 w-3" />
-                    Salvar
-                  </button>
-                )}
-                <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            ))}
+              ))}
             
-              {/* ✅ INDICADOR DE STATUS */}
-              {(isListening || isProcessing || isPaused || isAISpeaking) && (
+              {/* Indicador visual melhorado */}
+              {!useTextInput && !isPaused && (
+                <VoiceIndicator
+                  status={
+                    isAISpeaking ? 'idle' :
+                    isProcessing ? 'processing' :
+                    voiceRecognition.status === 'error' ? 'error' :
+                    voiceRecognition.status
+                  }
+                  audioLevel={voiceRecognition.audioLevel}
+                  interimTranscript={voiceRecognition.interimTranscript}
+                  confidence={voiceRecognition.confidence}
+                />
+              )}
+
+              {isPaused && (
                 <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {isPaused && '⏸️ Conversa pausada'}
-                  {!isPaused && isAISpeaking && '🔊 NutriAI falando...'}
-                  {!isPaused && !isAISpeaking && isListening && '🎤 Ouvindo... Fale agora!'}
-                  {!isPaused && !isAISpeaking && isProcessing && '💭 NutriAI processando...'}
+                  ⏸️ Conversa pausada
+                </div>
+              )}
+
+              {isAISpeaking && (
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  🔊 NutriAI falando...
                 </div>
               )}
             </div>
           )}
 
-          <div className="p-3 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-2xl">
-            <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-              {isPaused ? '⏸️ Use o botão ▶️ para retomar' : '💡 Conversa fluida ativa - Fale naturalmente'}
-            </p>
-          </div>
+          {/* Input de texto como fallback ou alternativa */}
+          {(useTextInput || !voiceRecognition.isSupported) && (
+            <VoiceTextInput 
+              onSend={handleTextMessage}
+              disabled={isProcessing || isPaused}
+              placeholder={
+                isPaused ? 'Conversa pausada...' :
+                !voiceRecognition.isSupported ? 'Voz não suportada - Use texto' :
+                'Digite sua mensagem...'
+              }
+            />
+          )}
+
+          {!useTextInput && voiceRecognition.isSupported && (
+            <div className="p-3 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-2xl">
+              <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                {isPaused ? '⏸️ Use o botão ▶️ para retomar' : '💡 Fale naturalmente - Sistema otimizado'}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
