@@ -254,11 +254,6 @@ export default function MuscleWorkoutPage() {
                     <Dumbbell className="mr-2 h-4 w-4" />
                     {exercises.length} exercícios disponíveis
                   </Badge>
-                  {selectedExercises.size > 0 && (
-                    <Badge className="text-base bg-primary">
-                      {selectedExercises.size} selecionados
-                    </Badge>
-                  )}
                 </div>
               )}
             </div>
