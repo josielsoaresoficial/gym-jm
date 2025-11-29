@@ -70,6 +70,39 @@ const muscleTitles: Record<string, { title: string; description: string }> = {
   }
 };
 
+// Mapeamento de labels da URL para valores do banco de dados
+const muscleGroupMapping: Record<string, string> = {
+  // Nomes da URL → Valores no banco
+  'peitoral': 'peito',
+  'bíceps': 'biceps',
+  'biceps': 'biceps',
+  'abdômen': 'abdomen',
+  'abdomen': 'abdomen',
+  'antebraços': 'antebraco',
+  'antebracos': 'antebraco',
+  'oblíquos': 'abdomen',
+  'obliquos': 'abdomen',
+  'quadríceps': 'pernas',
+  'quadriceps': 'pernas',
+  'panturrilhas': 'pernas',
+  'dorsais': 'costas',
+  'trapézio': 'costas',
+  'trapezio': 'costas',
+  'lombares': 'costas',
+  'isquiotibiais': 'pernas',
+  'glúteos': 'gluteos',
+  'gluteos': 'gluteos',
+  // Valores que já funcionam
+  'ombros': 'ombros',
+  'adutores': 'adutores',
+  'costas': 'costas',
+  'peito': 'peito',
+  'pernas': 'pernas',
+  'triceps': 'triceps',
+  'tríceps': 'triceps',
+  'cardio': 'cardio',
+};
+
 export default function MuscleWorkoutPage() {
   const { muscleName } = useParams<{ muscleName: string }>();
   const navigate = useNavigate();
@@ -83,10 +116,13 @@ export default function MuscleWorkoutPage() {
 
       setLoading(true);
       try {
+        // Converter nome da URL para valor do banco de dados
+        const dbMuscleGroup = muscleGroupMapping[muscleName.toLowerCase()] || muscleName;
+        
         const { data, error } = await supabase
           .from('exercise_library')
           .select('*')
-          .eq('muscle_group', muscleName)
+          .eq('muscle_group', dbMuscleGroup)
           .order('name');
 
         if (error) throw error;
