@@ -83,6 +83,8 @@ const WorkoutSession: React.FC = () => {
   };
 
   const handleNextSet = () => {
+    if (!currentExercise) return;
+    
     const nextSet = currentSet + 1;
     
     if (nextSet >= currentExercise.sets) {
