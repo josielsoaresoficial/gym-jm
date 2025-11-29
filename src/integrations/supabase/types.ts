@@ -390,6 +390,7 @@ export type Database = {
           daily_protein_goal: number | null
           fitness_goal: string | null
           gender: string | null
+          goal_weight: number | null
           height: number | null
           id: string
           is_premium: boolean | null
@@ -411,6 +412,7 @@ export type Database = {
           daily_protein_goal?: number | null
           fitness_goal?: string | null
           gender?: string | null
+          goal_weight?: number | null
           height?: number | null
           id?: string
           is_premium?: boolean | null
@@ -432,6 +434,7 @@ export type Database = {
           daily_protein_goal?: number | null
           fitness_goal?: string | null
           gender?: string | null
+          goal_weight?: number | null
           height?: number | null
           id?: string
           is_premium?: boolean | null

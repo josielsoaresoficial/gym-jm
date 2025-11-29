@@ -28,6 +28,7 @@ const Profile = () => {
     height: number | null;
     fitness_goal: FitnessGoal | '';
     created_at: string | null;
+    goal_weight: number | null;
   }
 
   interface UserPreferences {
@@ -50,7 +51,8 @@ const Profile = () => {
     weight: null,
     height: null,
     fitness_goal: '',
-    created_at: null
+    created_at: null,
+    goal_weight: null
   });
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   
@@ -95,7 +97,8 @@ const Profile = () => {
             weight: profile.weight ?? null,
             height: profile.height ?? null,
             fitness_goal: profile.fitness_goal as FitnessGoal ?? '',
-            created_at: profile.created_at ?? null
+            created_at: profile.created_at ?? null,
+            goal_weight: profile.goal_weight ?? null
           });
           return;
         }
@@ -121,7 +124,8 @@ const Profile = () => {
             weight: parsed.currentWeight ?? parsed.weight ?? null,
             height: parsed.height ?? null,
             fitness_goal: (parsed.fitnessGoal ?? parsed.fitness_goal) as FitnessGoal ?? '',
-            created_at: null
+            created_at: null,
+            goal_weight: parsed.goalWeight ?? null
           });
           return;
         }
@@ -138,7 +142,8 @@ const Profile = () => {
         weight: typeof m.weight === 'number' ? m.weight : m.weight ? Number(m.weight) : null,
         height: typeof m.height === 'number' ? m.height : m.height ? Number(m.height) : null,
         fitness_goal: (m.fitness_goal as FitnessGoal) ?? '',
-        created_at: null
+        created_at: null,
+        goal_weight: typeof m.goal_weight === 'number' ? m.goal_weight : m.goal_weight ? Number(m.goal_weight) : null
       });
     };
 
@@ -303,6 +308,55 @@ const Profile = () => {
     }
   };
 
+  // Salvar perfil
+  const handleSaveProfile = async () => {
+    try {
+      if (!user) return;
+
+      const nameInput = document.getElementById('name') as HTMLInputElement;
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const ageInput = document.getElementById('age') as HTMLInputElement;
+      const heightInput = document.getElementById('height') as HTMLInputElement;
+      const weightInput = document.getElementById('weight') as HTMLInputElement;
+      const goalWeightInput = document.getElementById('goal-weight') as HTMLInputElement;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: nameInput?.value || userData.name,
+          age: ageInput?.value ? Number(ageInput.value) : userData.age,
+          height: heightInput?.value ? Number(heightInput.value) : userData.height,
+          weight: weightInput?.value ? Number(weightInput.value) : userData.weight,
+          goal_weight: goalWeightInput?.value ? Number(goalWeightInput.value) : userData.goal_weight,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setUserData(prev => ({
+        ...prev,
+        name: nameInput?.value || prev.name,
+        age: ageInput?.value ? Number(ageInput.value) : prev.age,
+        height: heightInput?.value ? Number(heightInput.value) : prev.height,
+        weight: weightInput?.value ? Number(weightInput.value) : prev.weight,
+        goal_weight: goalWeightInput?.value ? Number(goalWeightInput.value) : prev.goal_weight,
+      }));
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar suas informações.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const goalValueForSelect = useMemo(() => {
     const val = userData.fitness_goal ? userData.fitness_goal.replace('_','-') : '';
     if (val === 'weight-loss' || val === 'muscle-gain' || val === 'maintenance') return val;
@@ -404,16 +458,7 @@ const Profile = () => {
               
               <div>
                 <Label htmlFor="goal-weight">Peso objetivo (kg)</Label>
-                <Input id="goal-weight" defaultValue={(() => {
-                  try {
-                    const saved = localStorage.getItem('userData');
-                    if (saved) {
-                      const parsed = JSON.parse(saved);
-                      return parsed.goalWeight ? String(parsed.goalWeight) : '';
-                    }
-                  } catch (_e) {}
-                  return '';
-                })()} />
+                <Input id="goal-weight" defaultValue={userData.goal_weight !== null ? String(userData.goal_weight) : ""} />
               </div>
               
               <div>
@@ -460,7 +505,7 @@ const Profile = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2 mt-6">
-            <Button variant="fitness" className="flex-1 text-xs sm:text-sm">
+            <Button variant="fitness" className="flex-1 text-xs sm:text-sm" onClick={handleSaveProfile}>
               <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="ml-1">Salvar Alterações</span>
             </Button>

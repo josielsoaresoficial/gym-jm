@@ -93,6 +93,7 @@ const OnboardingFlow = () => {
           height: demoData.height,
           gender: demoData.gender,
           fitness_goal: fitnessGoal,
+          goal_weight: demoData.goalWeight,
           onboarding_completed: true
         } as any, {
           onConflict: 'user_id'
@@ -167,6 +168,7 @@ const OnboardingFlow = () => {
             height: data.height,
             gender: data.gender,
             fitness_goal: fitnessGoal,
+            goal_weight: data.goalWeight,
             onboarding_completed: true
           } as any, {
             onConflict: 'user_id'
