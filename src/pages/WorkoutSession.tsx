@@ -56,7 +56,7 @@ const WorkoutSession: React.FC = () => {
     }
   }, [workoutStatus]);
 
-  const currentExercise = workout?.exercises[currentExerciseIndex];
+  const currentExercise = workout?.exercises?.[currentExerciseIndex];
   const timerDuration = isResting && currentExercise ? currentExercise.restTime : 0;
 
   const startWorkout = () => {
