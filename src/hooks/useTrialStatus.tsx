@@ -7,6 +7,7 @@ export interface TrialStatus {
   isTrialActive: boolean;
   isTrialExpired: boolean;
   isPremium: boolean;
+  hasTrialStarted: boolean;
   startTrial: () => Promise<void>;
   loading: boolean;
 }
@@ -125,13 +126,15 @@ export function useTrialStatus(): TrialStatus {
     }
   };
 
-  const isTrialActive = !!trialStartedAt && !trialExpired && !isPremium && timeRemaining > 0;
+  const hasTrialStarted = !!trialStartedAt;
+  const isTrialActive = hasTrialStarted && !trialExpired && !isPremium && timeRemaining > 0;
 
   return {
     timeRemaining,
     isTrialActive,
     isTrialExpired: trialExpired && !isPremium,
     isPremium,
+    hasTrialStarted,
     startTrial,
     loading
   };

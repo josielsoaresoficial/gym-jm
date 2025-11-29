@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/untyped";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
 
 const authSchema = z.object({
   email: z.string()
@@ -26,6 +27,7 @@ interface AuthDialogProps {
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const navigate = useNavigate();
+  const { startTrial } = useTrialStatus();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -121,6 +123,9 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           setEmail("");
           setPassword("");
           
+          // Iniciar trial
+          await startTrial();
+          
           // Verifica se o usuário já completou o onboarding
           const { data: profileData } = await supabase
             .from('profiles' as any)
@@ -182,6 +187,9 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             onOpenChange(false);
             setEmail("");
             setPassword("");
+            
+            // Iniciar trial
+            await startTrial();
             
             // Criar perfil automaticamente
             await supabase
