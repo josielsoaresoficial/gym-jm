@@ -312,9 +312,13 @@ export default function Workouts() {
       </div>
 
         <Tabs defaultValue="workouts" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="workouts">Treinos Rápidos</TabsTrigger>
-            <TabsTrigger value="exercises">Biblioteca de Exercícios</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-6 h-auto">
+            <TabsTrigger value="workouts" className="py-3 text-xs sm:text-sm">
+              Treinos Rápidos
+            </TabsTrigger>
+            <TabsTrigger value="exercises" className="py-3 text-xs sm:text-sm">
+              Biblioteca de Exercícios
+            </TabsTrigger>
           </TabsList>
 
           {/* ABA DE TREINOS RÁPIDOS */}
