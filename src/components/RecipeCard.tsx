@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Users, Share2, Copy, Check, Mail, MessageCircle, Twitter, Facebook, Send, Pencil } from 'lucide-react';
+import { Trash2, Clock, Users, Share2, Copy, Check, Mail, MessageCircle, Twitter, Facebook, Send, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { FavoriteRecipe, RecipeCategory } from '@/hooks/useFavoriteRecipes';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +34,7 @@ interface RecipeCardProps {
 export const RecipeCard = ({ recipe, onDelete, onEdit }: RecipeCardProps) => {
   const [copied, setCopied] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
 
   const categoryLabels: Record<RecipeCategory, string> = {
@@ -307,26 +308,49 @@ export const RecipeCard = ({ recipe, onDelete, onEdit }: RecipeCardProps) => {
           </div>
         )}
 
-        <div>
-          <h4 className="font-semibold mb-2">Ingredientes:</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm">
-            {recipe.ingredients.map((ing, idx) => (
-              <li key={idx}>
-                {ing.quantity ? `${ing.quantity} - ${ing.item}` : ing.item}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              Recolher
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              Ver receita completa
+            </>
+          )}
+        </Button>
 
-        <div>
-          <h4 className="font-semibold mb-2">Modo de Preparo:</h4>
-          <p className="text-sm whitespace-pre-line">{recipe.instructions}</p>
-        </div>
+        {isExpanded && (
+          <div className="space-y-4 pt-2 border-t">
+            <div>
+              <h4 className="font-semibold mb-2">Ingredientes:</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {recipe.ingredients.map((ing, idx) => (
+                  <li key={idx}>
+                    {ing.quantity ? `${ing.quantity} - ${ing.item}` : ing.item}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        {recipe.notes && (
-          <div>
-            <h4 className="font-semibold mb-2">Notas:</h4>
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{recipe.notes}</p>
+            <div>
+              <h4 className="font-semibold mb-2">Modo de Preparo:</h4>
+              <p className="text-sm whitespace-pre-line">{recipe.instructions}</p>
+            </div>
+
+            {recipe.notes && (
+              <div>
+                <h4 className="font-semibold mb-2">Notas:</h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{recipe.notes}</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
