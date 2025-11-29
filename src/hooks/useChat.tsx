@@ -41,6 +41,15 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
   const { speak, isLoading: isVoiceLoading } = useVoice();
   const chatHistoryRef = useRef<Message[]>([]);
 
+  // Lista de palavras comuns que NÃO são nomes
+  const COMMON_WORDS = new Set([
+    'sim', 'não', 'nao', 'oi', 'olá', 'ola', 'ei', 'hey', 'hi', 'ok', 'tudo', 
+    'bem', 'legal', 'bom', 'boa', 'dia', 'noite', 'tarde', 'obrigado', 'obrigada',
+    'valeu', 'tchau', 'bye', 'como', 'que', 'qual', 'quem', 'onde', 'quando',
+    'porque', 'por', 'para', 'com', 'sem', 'mais', 'menos', 'muito', 'pouco',
+    'agora', 'depois', 'antes', 'sempre', 'nunca', 'talvez', 'claro', 'certo'
+  ]);
+
   // Analisar intenção do usuário de forma mais inteligente
   const analyzeIntent = useCallback((message: string): Intent => {
     const lowerMsg = message.toLowerCase().trim();
@@ -56,13 +65,15 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
       const match = message.match(pattern);
       if (match && match[2]) {
         const name = match[2].split(' ')[0].trim();
-        if (name.length >= 2 && name.length <= 20) {
+        // Verificar se NÃO é palavra comum
+        if (name.length >= 2 && name.length <= 20 && !COMMON_WORDS.has(name.toLowerCase())) {
           return { type: 'set_name', data: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() };
         }
       } else if (pattern.test(lowerMsg) && lowerMsg.split(' ').length === 1) {
         // Caso o usuário digite apenas o nome
         const name = lowerMsg;
-        if (name.length >= 2 && name.length <= 20 && !/[0-9]/.test(name)) {
+        // Validar: tamanho, sem números, e NÃO é palavra comum
+        if (name.length >= 2 && name.length <= 20 && !/[0-9]/.test(name) && !COMMON_WORDS.has(name)) {
           return { type: 'set_name', data: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() };
         }
       }

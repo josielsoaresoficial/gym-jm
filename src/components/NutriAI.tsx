@@ -35,7 +35,7 @@ const NutriAI = () => {
   const voiceRecognition = useVoiceRecognition({
     language: 'pt-BR',
     continuous: true,
-    silenceTimeout: 1200,
+    silenceTimeout: 2000,
     enabled: isActive && !isPaused && !isAISpeaking && !useTextInput,
     onResult: (transcript, confidence) => {
       console.log('🎤 Voz capturada:', transcript, 'Confiança:', confidence);

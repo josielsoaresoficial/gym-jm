@@ -100,6 +100,12 @@ Ao criar dietas ou receitas, seja mais detalhado:
 - Inclua macros aproximados (calorias, proteína, carbs, gordura)
 - Dê dicas de preparo ou substituições
 
+IMPORTANTE - COMPREENSÃO:
+- Se a mensagem do usuário parecer confusa, incompleta ou curta demais, peça gentilmente para repetir ou esclarecer
+- Se não entender o contexto, faça perguntas esclarecedoras específicas
+- Mantenha-se sempre no contexto da conversa anterior
+- Não faça suposições sobre mensagens ambíguas
+
 ESTILO:
 - Respostas curtas e práticas (conversas)
 - Detalhado e estruturado (dietas/receitas)
@@ -119,7 +125,7 @@ ESTILO:
           { role: 'system', content: systemPrompt },
           ...messages
         ],
-        temperature: 0.8,
+        temperature: 0.5,
         max_tokens: 2048,
       }),
     });

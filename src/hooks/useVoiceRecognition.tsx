@@ -24,7 +24,7 @@ interface UseVoiceRecognitionOptions {
 export const useVoiceRecognition = ({
   language = 'pt-BR',
   continuous = true,
-  silenceTimeout = 1200,
+  silenceTimeout = 2000,
   onResult,
   onError,
   enabled = true
@@ -170,10 +170,13 @@ export const useVoiceRecognition = ({
         } else if (interimTranscript.trim()) {
           setState(prev => ({ ...prev, interimTranscript: interimTranscript.trim() }));
           
-          // Timer de silêncio adaptativo
+          // Timer de silêncio adaptativo com validação
           silenceTimerRef.current = setTimeout(() => {
             const currentInterim = interimTranscript.trim();
-            if (currentInterim) {
+            const wordCount = currentInterim.split(' ').filter(w => w.length > 0).length;
+            
+            // Só processar se tiver conteúdo significativo (2+ palavras ou 4+ caracteres)
+            if (currentInterim && (wordCount >= 2 || currentInterim.length >= 4)) {
               console.log('⏱️ Processando por silêncio:', currentInterim);
               processFinalResult(currentInterim, 0.7);
             }
