@@ -91,7 +91,12 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
           {todayStats.map((stat, index) => (
             <Link key={index} to={stat.link}>
-              <StatCard {...stat} />
+              <div 
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <StatCard {...stat} />
+              </div>
             </Link>
           ))}
         </div>

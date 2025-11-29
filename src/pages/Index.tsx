@@ -198,30 +198,38 @@ const Index = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-            <StatCard
-              icon={<Users className="w-6 h-6" />}
-              title="Capacidade +50K Usuários Ativos"
-              value="50K+"
-              variant="fitness"
-            />
-            <StatCard
-              icon={<Dumbbell className="w-6 h-6" />}
-              title="Exercícios"
-              value="350+"
-              variant="fitness"
-            />
-            <StatCard
-              icon={<Apple className="w-6 h-6" />}
-              title="Refeições Analisadas"
-              value="1M+"
-              variant="nutrition"
-            />
-            <StatCard
-              icon={<TrendingUp className="w-6 h-6" />}
-              title="Precisão IA"
-              value="90%+"
-              variant="nutrition"
-            />
+            <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+              <StatCard
+                icon={<Users className="w-6 h-6" />}
+                title="Capacidade +50K Usuários Ativos"
+                value="50K+"
+                variant="fitness"
+              />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <StatCard
+                icon={<Dumbbell className="w-6 h-6" />}
+                title="Exercícios"
+                value="350+"
+                variant="fitness"
+              />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <StatCard
+                icon={<Apple className="w-6 h-6" />}
+                title="Refeições Analisadas"
+                value="1M+"
+                variant="nutrition"
+              />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+              <StatCard
+                icon={<TrendingUp className="w-6 h-6" />}
+                title="Precisão IA"
+                value="90%+"
+                variant="nutrition"
+              />
+            </div>
           </div>
 
           {/* CTA Section */}
