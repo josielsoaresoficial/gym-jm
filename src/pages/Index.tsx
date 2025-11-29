@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GymCard } from "@/components/GymCard";
 import { StatCard } from "@/components/StatCard";
-import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat } from "lucide-react";
+import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat, Clock as ClockIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import heroVideo from "@/assets/hero-video.mp4";
 import heroVideo2 from "@/assets/hero-video-2.mp4";
@@ -106,7 +106,8 @@ const Index = () => {
                 Ver Demo
               </Button>
             </div>
-            <p className="text-sm text-white/60 mt-4">
+            <p className="text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+              <ClockIcon className="w-4 h-4" />
               Teste grátis por 24 horas
             </p>
           </div>
