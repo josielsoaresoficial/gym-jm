@@ -52,7 +52,7 @@ const NutriAI = () => {
     setSaveRecipeDialog(true);
   };
 
-  // ✅ BUSCAR NOME DO PERFIL E PREFERÊNCIA DE VOZ
+  // ✅ BUSCAR NOME DO PERFIL
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!user?.id) return;
@@ -67,21 +67,14 @@ const NutriAI = () => {
       if (profile && profile.name) {
         setProfileName(profile.name);
       }
-      
-      // Buscar preferência de voz do localStorage
-      const storedVoice = localStorage.getItem('voiceProvider') as VoiceProvider;
-      if (storedVoice) {
-        setVoiceProvider(storedVoice);
-      }
     };
     
     fetchProfileData();
-  }, [user, setVoiceProvider]);
+  }, [user]);
 
-  // Salvar preferência de voz quando mudar
+  // Trocar voz manualmente (temporário, não persiste)
   const handleVoiceChange = (newVoice: VoiceProvider) => {
     setVoiceProvider(newVoice);
-    localStorage.setItem('voiceProvider', newVoice);
   };
 
   // ✅ EXTRAIR PRIMEIRO NOME DO PERFIL
