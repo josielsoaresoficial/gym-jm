@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/untyped";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { PushNotificationSettings } from "@/components/PushNotificationSettings";
+import { WelcomePremiumDialog } from "@/components/WelcomePremiumDialog";
 
 const Profile = () => {
   // === INÍCIO DAS MODIFICAÇÕES ===
@@ -49,6 +50,7 @@ const Profile = () => {
   });
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [showWelcomePremium, setShowWelcomePremium] = useState<boolean>(false);
   
   const [preferences, setPreferences] = useState<UserPreferences>({
     workoutNotifications: false,
@@ -75,7 +77,16 @@ const Profile = () => {
 
         if (profile) {
           setAvatarUrl(profile.avatar_url || '');
-          setIsPremium(profile.is_premium || false);
+          const newPremiumStatus = profile.is_premium || false;
+          
+          // Detectar se o usuário acabou de se tornar Premium
+          const hasSeenWelcome = localStorage.getItem('hasSeenPremiumWelcome');
+          if (newPremiumStatus && !hasSeenWelcome && !isPremium) {
+            setShowWelcomePremium(true);
+            localStorage.setItem('hasSeenPremiumWelcome', 'true');
+          }
+          
+          setIsPremium(newPremiumStatus);
           
           // Se o nome salvo for um email, tentar usar o metadata do usuário
           let displayName = profile.name || '';
@@ -633,6 +644,30 @@ const Profile = () => {
                 Gerenciar
               </Button>
             </div>
+
+            {/* Test Premium Button - Remover quando integrar pagamentos */}
+            <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg border-2 border-dashed border-primary/30">
+              <div className="flex items-center gap-3 flex-1">
+                <Crown className="w-5 h-5 text-primary flex-shrink-0" />
+                <div>
+                  <div className="font-medium">Testar Modal Premium</div>
+                  <div className="text-sm text-muted-foreground">
+                    Simular ativação de assinatura Premium (apenas teste)
+                  </div>
+                </div>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem('hasSeenPremiumWelcome');
+                  setShowWelcomePremium(true);
+                }}
+                className="flex-shrink-0"
+              >
+                Testar
+              </Button>
+            </div>
           </div>
         </GymCard>
 
@@ -646,6 +681,12 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Welcome Premium Dialog */}
+      <WelcomePremiumDialog 
+        open={showWelcomePremium} 
+        onOpenChange={setShowWelcomePremium}
+      />
     </Layout>
   );
 };
