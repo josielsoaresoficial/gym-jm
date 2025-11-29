@@ -289,26 +289,27 @@ export default function Workouts() {
     <Layout>
       <div className="w-full mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Treinos & Exercícios
-              </h1>
-              <p className="text-muted-foreground">
-                Explore treinos rápidos e nossa biblioteca completa de exercícios
-              </p>
-            </div>
-            <Button
-              onClick={() => navigate('/custom-workouts')}
-              size="lg"
-              className="gap-2 w-full sm:w-auto"
-            >
-              <Dumbbell className="w-5 h-5" />
-              Meus Treinos
-            </Button>
+      <div className="mb-8">
+        <div className="flex flex-col gap-4 mb-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Treinos & Exercícios
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Explore treinos rápidos e nossa biblioteca completa de exercícios
+            </p>
           </div>
+          <Button
+            onClick={() => navigate('/custom-workouts')}
+            size="default"
+            variant="outline"
+            className="gap-2 w-full sm:w-auto"
+          >
+            <Dumbbell className="w-5 h-5" />
+            Meus Treinos
+          </Button>
         </div>
+      </div>
 
         <Tabs defaultValue="workouts" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -336,7 +337,8 @@ export default function Workouts() {
               key={category.key}
               variant={activeCategory === category.key ? "default" : "outline"}
               onClick={() => setActiveCategory(category.key)}
-              className="whitespace-nowrap"
+              size="sm"
+              className="whitespace-nowrap flex-shrink-0 text-xs sm:text-sm"
             >
               {category.name}
             </Button>

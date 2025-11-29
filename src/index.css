@@ -294,6 +294,15 @@ All colors MUST be HSL.
   .animate-legs {
     animation: legs 2s ease-in-out infinite;
   }
+
+  /* Scrollbar Hide Utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
 }
 
 /* Garantir que o dropdown seja visível e funcional no mobile */
