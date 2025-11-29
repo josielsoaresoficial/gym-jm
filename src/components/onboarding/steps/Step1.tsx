@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { OnboardingData } from "../OnboardingFlow";
-import workoutIcon from "@/assets/workout-icon.png";
+import { Dumbbell } from "lucide-react";
 
 interface StepProps {
   data: OnboardingData;
@@ -20,11 +20,9 @@ const Step1 = ({ nextStep }: StepProps) => {
       </div>
 
       <div className="py-8">
-        <img 
-          src={workoutIcon} 
-          alt="Workout Icon" 
-          className="w-48 h-48 mx-auto"
-        />
+        <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <Dumbbell className="w-16 h-16 text-white" />
+        </div>
       </div>
 
       <Button 
