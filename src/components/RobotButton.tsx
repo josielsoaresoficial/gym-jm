@@ -327,21 +327,42 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing 
               animate={{
                 d: isSpeaking 
                   ? [
-                      "M 40 58 Q 50 68 60 58",  // Boca aberta
+                      "M 38 55 Q 50 75 62 55",  // Boca bem aberta (forma de "O")
                       "M 40 60 Q 50 62 60 60",  // Boca fechada
-                      "M 40 59 Q 50 65 60 59",  // Boca média
+                      "M 39 57 Q 50 70 61 57",  // Boca média-aberta
                       "M 40 60 Q 50 62 60 60",  // Boca fechada
+                      "M 38 56 Q 50 72 62 56",  // Boca aberta variação
+                      "M 40 60 Q 50 64 60 60",  // Boca levemente aberta
                     ]
                   : isActive 
                     ? "M 40 60 Q 50 65 60 60"   // Sorriso acordado
                     : "M 40 60 Q 50 63 60 60"   // Sorriso dormindo
               }}
               transition={{ 
-                duration: isSpeaking ? 0.4 : 0.5,
+                duration: isSpeaking ? 0.25 : 0.5,
                 repeat: isSpeaking ? Infinity : 0,
                 ease: "easeInOut"
               }}
             />
+            
+            {/* Interior da boca (aparece quando muito aberta) */}
+            {isSpeaking && (
+              <motion.ellipse
+                cx="50"
+                cy="66"
+                rx="8"
+                ry="6"
+                fill="rgba(90, 127, 147, 0.3)"
+                animate={{
+                  opacity: [0.3, 0, 0.2, 0, 0.25, 0],
+                }}
+                transition={{
+                  duration: 0.25,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+            )}
 
             {/* Antena Esquerda */}
             <g>
