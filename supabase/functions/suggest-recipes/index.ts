@@ -13,9 +13,9 @@ serve(async (req) => {
   try {
     const { fitnessGoal, dailyCalories, dailyProtein, dailyCarbs, dailyFat } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY não configurada');
+    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+    if (!GOOGLE_AI_API_KEY) {
+      throw new Error('GOOGLE_AI_API_KEY não configurada');
     }
 
     // Mapear objetivos para contexto nutricional
@@ -28,7 +28,7 @@ serve(async (req) => {
     };
     const goalContext = goalMap[fitnessGoal] || 'saudável e balanceada';
 
-    const systemPrompt = `Você é um chef especializado em nutrição esportiva e fitness. Gere EXATAMENTE 4 receitas aleatórias e variadas para um objetivo de ${goalContext}.
+    const prompt = `Você é um chef especializado em nutrição esportiva e fitness. Gere EXATAMENTE 4 receitas aleatórias e variadas para um objetivo de ${goalContext}.
 
 IMPORTANTE:
 - As receitas devem ser COMPLETAMENTE DIFERENTES entre si (café da manhã, almoço, lanche, jantar)
@@ -43,69 +43,43 @@ Metas nutricionais diárias:
 - Carboidratos: ${dailyCarbs}g
 - Gorduras: ${dailyFat}g
 
-Para cada receita, considere que ela representa uma refeição (cerca de 25-35% das metas diárias).`;
+Para cada receita, considere que ela representa uma refeição (cerca de 25-35% das metas diárias).
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+RETORNE UM JSON VÁLIDO com este formato EXATO:
+{
+  "recipes": [
+    {
+      "title": "Nome da receita",
+      "description": "Descrição breve",
+      "prepTime": "30 min",
+      "servings": 2,
+      "calories": 500,
+      "protein": 30,
+      "carbs": 60,
+      "fat": 15,
+      "ingredients": ["ingrediente 1 com quantidade", "ingrediente 2"],
+      "instructions": ["passo 1", "passo 2"],
+      "category": "Almoço"
+    }
+  ]
+}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: 'Gere 4 receitas totalmente diferentes e criativas seguindo as especificações.'
-          }
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'generate_recipes',
-            description: 'Gera receitas personalizadas baseadas nos objetivos do usuário',
-            parameters: {
-              type: 'object',
-              properties: {
-                recipes: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      title: { type: 'string', description: 'Nome da receita' },
-                      description: { type: 'string', description: 'Descrição breve' },
-                      prepTime: { type: 'string', description: 'Tempo de preparo (ex: 30 min)' },
-                      servings: { type: 'number', description: 'Número de porções' },
-                      calories: { type: 'number', description: 'Calorias por porção' },
-                      protein: { type: 'number', description: 'Proteína em gramas' },
-                      carbs: { type: 'number', description: 'Carboidratos em gramas' },
-                      fat: { type: 'number', description: 'Gorduras em gramas' },
-                      ingredients: {
-                        type: 'array',
-                        items: { type: 'string' },
-                        description: 'Lista de ingredientes com quantidades'
-                      },
-                      instructions: {
-                        type: 'array',
-                        items: { type: 'string' },
-                        description: 'Passos do modo de preparo'
-                      },
-                      category: {
-                        type: 'string',
-                        description: 'Categoria da refeição',
-                        enum: ['Café da Manhã', 'Almoço', 'Lanche', 'Jantar', 'Pós-Treino']
-                      }
-                    },
-                    required: ['title', 'description', 'prepTime', 'servings', 'calories', 'protein', 'carbs', 'fat', 'ingredients', 'instructions', 'category']
-                  }
-                }
-              },
-              required: ['recipes']
-            }
-          }
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
         }],
-        tool_choice: { type: 'function', function: { name: 'generate_recipes' } }
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json"
+        }
       }),
     });
 
@@ -116,27 +90,21 @@ Para cada receita, considere que ela representa uma refeição (cerca de 25-35% 
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos esgotados. Por favor, adicione créditos ao seu workspace.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       
       const errorText = await response.text();
-      console.error('Erro na API Lovable AI:', response.status, errorText);
+      console.error('Erro na API Google Gemini:', response.status, errorText);
       throw new Error('Erro ao gerar receitas');
     }
 
     const data = await response.json();
     console.log('Resposta da API:', JSON.stringify(data, null, 2));
 
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
       throw new Error('Nenhuma receita gerada');
     }
 
-    const recipes = JSON.parse(toolCall.function.arguments).recipes;
+    const recipes = JSON.parse(content).recipes;
 
     return new Response(
       JSON.stringify({ recipes }),
