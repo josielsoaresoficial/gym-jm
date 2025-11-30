@@ -225,18 +225,18 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
           <defs>
             {/* Gradientes */}
             <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#d4e8f0" />
-              <stop offset="100%" stopColor="#a8c9da" />
+              <stop offset="0%" stopColor="#b8d4e3" />
+              <stop offset="100%" stopColor="#d4e5ed" />
             </linearGradient>
             
             <linearGradient id="visorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2d3e50" />
-              <stop offset="100%" stopColor="#1a2634" />
+              <stop offset="0%" stopColor="#1a2634" />
+              <stop offset="100%" stopColor="#0f1419" />
             </linearGradient>
 
             <radialGradient id="ledGlow">
-              <stop offset="0%" stopColor="#00d4ff" stopOpacity="1" />
-              <stop offset="100%" stopColor="#00d4ff" stopOpacity="0" />
+              <stop offset="0%" stopColor="#00e5ff" stopOpacity="1" />
+              <stop offset="100%" stopColor="#00e5ff" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="reflectionGradient">
@@ -249,8 +249,8 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
           {/* Base/Pescoço (cone escuro) */}
           <motion.path
             d="M 35 80 L 30 100 L 70 100 L 65 80 Z"
-            fill="#2d3e50"
-            stroke="#1a2634"
+            fill="#1a2634"
+            stroke="#0f1419"
             strokeWidth="1.5"
           />
 
@@ -260,7 +260,7 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
             cy="100"
             rx="20"
             ry="5"
-            fill="#00d4ff"
+            fill="#00e5ff"
             opacity={isActive ? 0.9 : 0.5}
             animate={{
               opacity: isActive ? [0.9, 1, 0.9] : [0.5, 0.7, 0.5],
@@ -303,15 +303,15 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
               cy="45"
               r="28"
               fill="url(#bodyGradient)"
-              stroke="#7a9fb3"
+              stroke="#8ba9ba"
               strokeWidth="1.5"
             />
 
             {/* Linha decorativa no topo */}
             <motion.path
               d="M 30 32 Q 50 28 70 32"
-              stroke="#5a7f93"
-              strokeWidth="1.5"
+              stroke="#6a8a9d"
+              strokeWidth="1.8"
               strokeLinecap="round"
               fill="none"
             />
@@ -334,14 +334,14 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
               height="18"
               rx="9"
               fill="url(#visorGradient)"
-              stroke="#1a2634"
-              strokeWidth="0.5"
+              stroke="#0f1419"
+              strokeWidth="1"
             />
 
             {/* Olhos - Expressões contextuais */}
             <motion.path
-              stroke="#6dd5ed"
-              strokeWidth="2.5"
+              stroke="#5dcde3"
+              strokeWidth="2.8"
               strokeLinecap="round"
               fill="none"
               animate={{
@@ -357,8 +357,8 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
             />
             
             <motion.path
-              stroke="#6dd5ed"
-              strokeWidth="2.5"
+              stroke="#5dcde3"
+              strokeWidth="2.8"
               strokeLinecap="round"
               fill="none"
               animate={{
@@ -376,8 +376,8 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
 
             {/* Boca animada (expressões contextuais) */}
             <motion.path
-              stroke="#5a7f93"
-              strokeWidth="2"
+              stroke="#6a8a9d"
+              strokeWidth="2.2"
               strokeLinecap="round"
               fill="none"
               animate={{
@@ -399,9 +399,9 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
                 cy="66"
                 rx="8"
                 ry="6"
-                fill="rgba(90, 127, 147, 0.3)"
+                fill="rgba(106, 138, 157, 0.35)"
                 animate={{
-                  opacity: [0.3, 0, 0.2, 0, 0.25, 0],
+                  opacity: [0.35, 0, 0.25, 0, 0.3, 0],
                 }}
                 transition={{
                   duration: 0.5,
@@ -414,19 +414,19 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
             {/* Antena Esquerda */}
             <g>
               {/* Base cilíndrica */}
-              <ellipse cx="24" cy="25" rx="3" ry="2" fill="#2d3e50" />
-              <rect x="21" y="25" width="6" height="3" fill="#2d3e50" />
-              <ellipse cx="24" cy="28" rx="3" ry="2" fill="#1a2634" />
+              <ellipse cx="24" cy="25" rx="3" ry="2" fill="#1a2634" />
+              <rect x="21" y="25" width="6" height="3" fill="#1a2634" />
+              <ellipse cx="24" cy="28" rx="3" ry="2" fill="#0f1419" />
               
               {/* Haste vertical */}
-              <line x1="24" y1="28" x2="18" y2="15" stroke="#2d3e50" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="24" y1="28" x2="18" y2="15" stroke="#1a2634" strokeWidth="2.5" strokeLinecap="round" />
               
               {/* LED cyan na ponta */}
               <motion.circle
                 cx="18"
                 cy="15"
                 r="3.5"
-                fill="#00d4ff"
+                fill="#00e5ff"
                 animate={{
                   opacity: isActive ? [1, 0.5, 1] : [0.7, 0.4, 0.7],
                 }}
@@ -457,19 +457,19 @@ const RobotButton = ({ onClick, isActive, isListening, isSpeaking, isProcessing,
             {/* Antena Direita */}
             <g>
               {/* Base cilíndrica */}
-              <ellipse cx="76" cy="25" rx="3" ry="2" fill="#2d3e50" />
-              <rect x="73" y="25" width="6" height="3" fill="#2d3e50" />
-              <ellipse cx="76" cy="28" rx="3" ry="2" fill="#1a2634" />
+              <ellipse cx="76" cy="25" rx="3" ry="2" fill="#1a2634" />
+              <rect x="73" y="25" width="6" height="3" fill="#1a2634" />
+              <ellipse cx="76" cy="28" rx="3" ry="2" fill="#0f1419" />
               
               {/* Haste vertical */}
-              <line x1="76" y1="28" x2="82" y2="15" stroke="#2d3e50" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="76" y1="28" x2="82" y2="15" stroke="#1a2634" strokeWidth="2.5" strokeLinecap="round" />
               
               {/* LED cyan na ponta */}
               <motion.circle
                 cx="82"
                 cy="15"
                 r="3.5"
-                fill="#00d4ff"
+                fill="#00e5ff"
                 animate={{
                   opacity: isActive ? [0.5, 1, 0.5] : [0.4, 0.7, 0.4],
                 }}
