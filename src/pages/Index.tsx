@@ -240,6 +240,101 @@ const Index = () => {
             </div>
           </div>
 
+          {/* Diet 21 Days Section */}
+          <div className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-background rounded-2xl p-8 md:p-12 mb-16">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full mb-4">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Programa Exclusivo</span>
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4">
+                  Dieta de 21 Dias
+                </h3>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Um programa completo de emagrecimento saudável com plano alimentar estruturado, 
+                  receitas personalizadas e acompanhamento diário.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                      <TrendingUp className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">Resultados Comprovados</h4>
+                      <p className="text-sm text-muted-foreground">Perca de 5 a 15kg em 21 dias com método cientificamente validado</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                      <ChefHat className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">Refeições Personalizadas</h4>
+                      <p className="text-sm text-muted-foreground">Plano alimentar adaptado aos seus objetivos e preferências</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                      <ClockIcon className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">Acompanhamento Diário</h4>
+                      <p className="text-sm text-muted-foreground">Dicas, receitas e orientações para cada dia do programa</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  variant="nutrition" 
+                  size="lg"
+                  onClick={() => handleProtectedAction("/diet-21-days")}
+                  className="w-full sm:w-auto"
+                >
+                  Começar Dieta de 21 Dias
+                </Button>
+              </div>
+
+              <div className="relative">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-4">
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">21</div>
+                      <div className="text-xs text-muted-foreground">Dias</div>
+                    </div>
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">5-15</div>
+                      <div className="text-xs text-muted-foreground">kg perdidos</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4 pt-8">
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">63</div>
+                      <div className="text-xs text-muted-foreground">Refeições</div>
+                    </div>
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">100+</div>
+                      <div className="text-xs text-muted-foreground">Receitas</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">3</div>
+                      <div className="text-xs text-muted-foreground">Semanas</div>
+                    </div>
+                    <div className="bg-card border border-border rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-secondary">90%</div>
+                      <div className="text-xs text-muted-foreground">Satisfação</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* CTA Section */}
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4">Pronto para começar sua transformação?</h3>
