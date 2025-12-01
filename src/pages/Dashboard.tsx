@@ -3,7 +3,7 @@ import { StatCard } from "@/components/StatCard";
 import { GymCard } from "@/components/GymCard";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock as ClockIcon, Target, Flame, Droplets, Zap, Plus, TrendingUp } from "lucide-react";
+import { Calendar, Clock as ClockIcon, Target, Flame, Droplets, Zap, Plus, TrendingUp, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeSelector } from "@/components/ThemeSelector";
@@ -78,6 +78,36 @@ const Dashboard = () => {
             </Link>
           </div>
         </div>
+        )}
+
+        {/* Banner Dieta 21 Dias - Apenas para objetivo de emagrecimento */}
+        {profile?.fitness_goal === 'weight_loss' && (
+          <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <Link to="/diet-21-days">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-green-500/10 border-2 border-green-500/30 p-6 cursor-pointer hover:border-green-500/50 transition-all hover:shadow-lg hover:shadow-green-500/20">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-green-500/20 to-transparent rounded-full blur-3xl" />
+                <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                      <Calendar className="w-8 h-8" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-xl font-bold text-foreground">Dieta de 21 Dias</h3>
+                        <Sparkles className="w-5 h-5 text-green-500" />
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        Programa especial de emagrecimento saudável. Perca de 5 a 15kg em 21 dias com planos alimentares personalizados!
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="nutrition" size="lg" className="whitespace-nowrap">
+                    Começar Agora
+                  </Button>
+                </div>
+              </div>
+            </Link>
+          </div>
         )}
 
         {/* Stats Grid */}
