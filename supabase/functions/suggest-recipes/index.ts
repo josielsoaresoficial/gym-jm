@@ -101,15 +101,30 @@ RETORNE UM JSON VÁLIDO com este formato EXATO:
     }
 
     const data = await response.json();
-    console.log('Resposta da API:', JSON.stringify(data, null, 2));
+    console.log('Resposta completa da API:', JSON.stringify(data, null, 2));
 
-    // Removed MAX_TOKENS check - let the model complete the response
-
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!content) {
-      throw new Error('Nenhuma receita gerada');
+    // Check if there are candidates
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('Nenhum candidato na resposta:', data);
+      throw new Error('API não retornou candidatos. Possível bloqueio de segurança ou erro na API.');
     }
 
+    const candidate = data.candidates[0];
+    console.log('Candidate:', JSON.stringify(candidate, null, 2));
+
+    // Check for safety blocks or finish reason
+    if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+      console.error('Finish reason:', candidate.finishReason);
+      throw new Error(`Geração bloqueada: ${candidate.finishReason}`);
+    }
+
+    const content = candidate.content?.parts?.[0]?.text;
+    if (!content) {
+      console.error('Conteúdo vazio. Estrutura do candidate:', JSON.stringify(candidate, null, 2));
+      throw new Error('Nenhuma receita gerada. Verifique os logs para detalhes.');
+    }
+
+    console.log('Content recebido:', content.substring(0, 200));
     const recipes = JSON.parse(content).recipes;
 
     return new Response(
