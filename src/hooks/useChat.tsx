@@ -306,18 +306,23 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'elevenlabs-male')
 
       // Falar a resposta sempre (removendo emojis)
       console.log('🔊 Preparando para falar resposta com voz:', voiceProvider);
-      // Remove emojis, markdown e caracteres especiais antes de falar
+      // Remove emojis e markdown, mas mantém pontuação útil para entonação natural
       const textToSpeak = aiResponse
         .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu, '')
         .replace(/\*\*|__|\*|_|`|#{1,6}\s?/g, '')
-        // Mantém APENAS letras (incluindo acentuadas), números, espaços, vírgulas e pontos
-        .replace(/[^a-zA-ZÀ-ÿ0-9\s,.]/g, '')
+        // Mantém letras, números, espaços e pontuação útil (,.!?:;)
+        .replace(/[^a-zA-ZÀ-ÿ0-9\s,.!?:;]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
       
       if (textToSpeak) {
         console.log('🗣️ Falando:', textToSpeak.substring(0, 50) + '...');
-        await speak(textToSpeak, voiceProvider);
+        try {
+          await speak(textToSpeak, voiceProvider);
+        } catch (voiceError) {
+          console.error('❌ Erro ao falar resposta:', voiceError);
+          // Não mostrar toast para não interromper experiência
+        }
       }
 
     } catch (error) {
