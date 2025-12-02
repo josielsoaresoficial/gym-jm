@@ -66,6 +66,7 @@ const NutriAI = () => {
 
   const handleCharacterClick = async () => {
     if (!isActive) {
+      // Acordar o robô
       setIsActive(true);
       setMood('happy');
       
@@ -85,15 +86,18 @@ const NutriAI = () => {
       setTimeout(() => {
         setShowDialogue(false);
       }, 5000);
+    } else if (isListening) {
+      // Parar de ouvir
+      stopListening();
+    } else if (isAISpeaking || isProcessing) {
+      // Se está falando ou processando, começar a ouvir
+      startListening();
+      setMood('neutral');
+      setDialogueText('Estou ouvindo... 🎤');
+      setShowDialogue(true);
     } else {
-      if (isListening) {
-        stopListening();
-      } else {
-        startListening();
-        setMood('neutral');
-        setDialogueText('Estou ouvindo... 🎤');
-        setShowDialogue(true);
-      }
+      // Voltar a dormir
+      handleSleep();
     }
   };
 
@@ -173,29 +177,6 @@ const NutriAI = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Control buttons - simplified without settings */}
-        <AnimatePresence>
-          {isActive && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2"
-            >
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSleep();
-                }}
-              >
-                <span className="text-xs">💤</span>
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

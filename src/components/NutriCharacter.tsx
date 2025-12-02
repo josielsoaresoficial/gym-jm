@@ -340,6 +340,36 @@ const NutriCharacter = ({ isActive, isSpeaking, mood, size = 120 }: NutriCharact
           ))}
         </motion.g>
       )}
+
+      {/* Growing dots animation when active */}
+      {isActive && (
+        <motion.g>
+          {[
+            { r: 4, delay: 0 },
+            { r: 6, delay: 0.3 },
+            { r: 8, delay: 0.6 },
+          ].map((dot, i) => (
+            <motion.circle
+              key={i}
+              cx={110}
+              cy={15 - i * 12}
+              r={dot.r}
+              fill="hsl(var(--primary))"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ 
+                scale: [0, 1, 1],
+                opacity: [0, 1, 0.7]
+              }}
+              transition={{ 
+                duration: 0.5,
+                delay: dot.delay,
+                repeat: Infinity,
+                repeatDelay: 2
+              }}
+            />
+          ))}
+        </motion.g>
+      )}
     </motion.svg>
   );
 };
