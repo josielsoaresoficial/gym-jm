@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -7,8 +7,26 @@ export type VoiceProvider = 'elevenlabs-male' | 'elevenlabs-female';
 export const useVoice = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const speak = async (text: string, voiceProvider: VoiceProvider = 'elevenlabs-male', onSpeechEnd?: () => void) => {
+  // Limpar timeout de segurança
+  const clearSafetyTimeout = useCallback(() => {
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current);
+      safetyTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Resetar estado de reprodução
+  const resetPlayingState = useCallback(() => {
+    setIsPlaying(false);
+    setIsLoading(false);
+    sessionStorage.removeItem('voice_playing');
+    clearSafetyTimeout();
+  }, [clearSafetyTimeout]);
+
+  const speak = useCallback(async (text: string, voiceProvider: VoiceProvider = 'elevenlabs-male', onSpeechEnd?: () => void) => {
     if (!text || isPlaying) return;
 
     // Verificar se outra voz já está tocando (previne duplicação)
@@ -21,25 +39,30 @@ export const useVoice = () => {
     setIsLoading(true);
     sessionStorage.setItem('voice_playing', 'true');
     
+    // Timeout de segurança: resetar estado se áudio não iniciar em 15 segundos
+    safetyTimeoutRef.current = setTimeout(() => {
+      console.warn('⚠️ Timeout de segurança: áudio não iniciou em 15s, resetando estado');
+      resetPlayingState();
+      toast.error('Voz temporariamente indisponível', { duration: 3000 });
+    }, 15000);
+    
     try {
-      console.log('Requesting speech for:', { text, voiceProvider });
+      console.log('🔊 Requesting speech for:', { text: text.substring(0, 50), voiceProvider });
 
-      // SEMPRE usar edge function (tenta ElevenLabs com failover para Google TTS)
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { text, voiceProvider },
       });
 
       if (error) {
         console.error('Error generating speech:', error);
-        
-        // Edge function retornou erro - não mostrar toast, será tratado no catch
-        sessionStorage.removeItem('voice_playing');
-        setIsLoading(false);
+        resetPlayingState();
         return;
       }
 
       if (!data?.audioContent) {
-        throw new Error('No audio content received');
+        console.error('No audio content received');
+        resetPlayingState();
+        return;
       }
 
       // Convert base64 to blob
@@ -53,37 +76,59 @@ export const useVoice = () => {
 
       // Play audio
       const audio = new Audio(url);
+      audioRef.current = audio;
       
       audio.onplay = () => {
+        console.log('✅ Áudio iniciado com sucesso');
         setIsPlaying(true);
-        setIsLoading(false); // ✅ Resetar isLoading quando o áudio começar a tocar
+        setIsLoading(false);
+        clearSafetyTimeout();
       };
+      
       audio.onended = () => {
+        console.log('✅ Áudio finalizado');
         setIsPlaying(false);
         sessionStorage.removeItem('voice_playing');
         URL.revokeObjectURL(url);
-        onSpeechEnd?.(); // ✅ Notificar que terminou de falar
+        clearSafetyTimeout();
+        onSpeechEnd?.();
         window.dispatchEvent(new Event('speechSynthesisEnded'));
       };
-      audio.onerror = () => {
-        setIsPlaying(false);
-        setIsLoading(false); // ✅ Resetar isLoading em caso de erro
-        sessionStorage.removeItem('voice_playing');
+      
+      audio.onerror = (e) => {
+        console.error('❌ Erro ao reproduzir áudio:', e);
+        resetPlayingState();
         URL.revokeObjectURL(url);
-        toast.error('Erro ao reproduzir áudio');
       };
 
-      await audio.play();
-      console.log('Audio playing successfully');
+      // Tentar reproduzir com tratamento de autoplay bloqueado
+      try {
+        await audio.play();
+        console.log('🔊 Audio playing successfully');
+      } catch (playError: any) {
+        if (playError.name === 'NotAllowedError') {
+          console.warn('⚠️ Autoplay bloqueado pelo navegador');
+          toast.info('Clique em qualquer lugar para ativar o áudio', { duration: 4000 });
+        } else {
+          console.error('❌ Erro ao iniciar reprodução:', playError);
+        }
+        resetPlayingState();
+        URL.revokeObjectURL(url);
+      }
     } catch (error) {
       console.error('Error in speak function:', error);
-      sessionStorage.removeItem('voice_playing');
-      setIsLoading(false);
-      
-      // Não mostrar toast para erros de voz - API pode estar temporariamente indisponível
-      // O erro já foi logado no console para debug
+      resetPlayingState();
     }
-  };
+  }, [isPlaying, resetPlayingState, clearSafetyTimeout]);
 
-  return { speak, isLoading, isPlaying };
+  // Função para parar o áudio
+  const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    resetPlayingState();
+  }, [resetPlayingState]);
+
+  return { speak, isLoading, isPlaying, stopSpeaking };
 };
