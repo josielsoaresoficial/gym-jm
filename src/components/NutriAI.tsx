@@ -1,263 +1,266 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings, Mic, Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import CharacterBase from './characters/CharacterBase';
+import CharacterSelector from './CharacterSelector';
+import CharacterDialogue from './CharacterDialogue';
+import { useCharacter, CharacterMood } from '@/hooks/useCharacter';
 import { useChat } from '@/hooks/useChat';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { SaveRecipeDialog } from './SaveRecipeDialog';
-import VoiceTextInput from './VoiceTextInput';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { MessageCircle, X, Mic, MicOff, Bot } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useVoice } from '@/hooks/useVoice';
+import { toast } from 'sonner';
 
 const NutriAI = () => {
-  const { 
-    messages, 
-    sendMessage, 
-    startConversation,
-    isProcessing,
-    currentMood,
-    isAISpeaking
-  } = useChat('elevenlabs-male');
-  
-  const [isOpen, setIsOpen] = useState(false);
-  const [saveRecipeDialog, setSaveRecipeDialog] = useState(false);
-  const [selectedRecipeContent, setSelectedRecipeContent] = useState('');
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { selectedCharacter, mood, setMood, state, setState } = useCharacter();
+  const { messages, sendMessage, startConversation, isProcessing, currentMood } = useChat();
+  const { speak, isPlaying } = useVoice();
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [dialogueText, setDialogueText] = useState('');
+  const [showDialogue, setShowDialogue] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isActive, setIsActive] = useState(false);
 
-  // Hook de reconhecimento de voz
   const voiceRecognition = useVoiceRecognition({
-    language: 'pt-BR',
-    continuous: true,
-    silenceTimeout: 2000,
-    enabled: voiceEnabled && isOpen && !isAISpeaking && !isProcessing,
-    onResult: (transcript, confidence) => {
-      console.log('🎤 Voz capturada:', transcript, 'Confiança:', confidence);
-      sendMessage(transcript, true);
+    onResult: (text) => {
+      if (text && text.trim().length > 0) {
+        handleUserMessage(text);
+      }
     },
     onError: (error) => {
-      console.error('❌ Erro de voz:', error);
+      toast.error('Erro no reconhecimento de voz: ' + error);
     }
   });
 
-  // Detectar se uma mensagem contém uma receita
-  const isRecipeMessage = (content: string) => {
-    const recipeKeywords = [
-      'ingredientes',
-      'modo de preparo',
-      'receita',
-      'calorias',
-      'proteína',
-      'porção',
-      'preparo:'
-    ];
-    const lowerContent = content.toLowerCase();
-    const matchCount = recipeKeywords.filter(keyword => lowerContent.includes(keyword)).length;
-    return matchCount >= 2;
-  };
+  const isListening = voiceRecognition.status === 'listening';
+  const startListening = voiceRecognition.start;
+  const stopListening = voiceRecognition.stop;
 
-  // Verificar se a última mensagem da IA contém receita
+  // Map chat mood to character mood
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant' && isRecipeMessage(lastMessage.content)) {
-        setSelectedRecipeContent(lastMessage.content);
-        setSaveRecipeDialog(true);
-      }
+    if (currentMood) {
+      const moodMap: Record<string, CharacterMood> = {
+        happy: 'happy',
+        excited: 'excited',
+        thinking: 'thinking',
+        serious: 'serious',
+        sad: 'sad',
+        grateful: 'happy',
+        neutral: 'neutral'
+      };
+      setMood(moodMap[currentMood] || 'neutral');
     }
-  }, [messages]);
+  }, [currentMood, setMood]);
 
-  // Auto-scroll para última mensagem
+  // Update state based on activity
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isProcessing) {
+      setState('speaking');
+    } else if (isListening) {
+      setState('listening');
+    } else if (isActive) {
+      setState('awake');
+    } else {
+      setState('sleeping');
+    }
+  }, [isProcessing, isListening, isActive, setState]);
 
-  // Abrir/Fechar chat
-  const toggleChat = async () => {
-    if (!isOpen) {
-      setIsOpen(true);
+  // Show dialogue when there's a new AI message
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant') {
+      setDialogueText(lastMessage.content.substring(0, 150) + (lastMessage.content.length > 150 ? '...' : ''));
+      setShowDialogue(true);
+      
+      // Speak the message if voice is enabled
+      if (voiceEnabled && lastMessage.content) {
+        speak(lastMessage.content, 'elevenlabs-female');
+      }
+
+      // Hide dialogue after 8 seconds
+      const timer = setTimeout(() => {
+        setShowDialogue(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, voiceEnabled, speak]);
+
+  const handleUserMessage = useCallback(async (text: string) => {
+    setMood('thinking');
+    await sendMessage(text);
+  }, [sendMessage, setMood]);
+
+  const handleCharacterClick = async () => {
+    if (!isActive) {
+      // Wake up
+      setIsActive(true);
+      setState('awake');
+      setMood('happy');
+      
+      // Show welcome dialogue
+      const welcomeMessages = [
+        "Olá! Como posso ajudar você hoje?",
+        "Pronto para falarmos sobre nutrição?",
+        "Estou aqui para ajudar com sua alimentação!"
+      ];
+      const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+      setDialogueText(randomWelcome);
+      setShowDialogue(true);
+
+      // Start conversation if not started
       if (messages.length === 0) {
         await startConversation();
       }
+
+      // Auto-hide welcome after 5 seconds
+      setTimeout(() => {
+        setShowDialogue(false);
+      }, 5000);
     } else {
-      setIsOpen(false);
-      setVoiceEnabled(false);
-      voiceRecognition.stop();
+      // Toggle listening when already active
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+        setMood('neutral');
+        setDialogueText('Estou ouvindo... 🎤');
+        setShowDialogue(true);
+      }
     }
   };
 
-  // Toggle voz
   const toggleVoice = () => {
-    if (voiceEnabled) {
-      setVoiceEnabled(false);
-      voiceRecognition.stop();
-    } else {
-      setVoiceEnabled(true);
+    setVoiceEnabled(!voiceEnabled);
+    toast.info(voiceEnabled ? 'Voz desativada' : 'Voz ativada');
+  };
+
+  const handleSleep = () => {
+    setIsActive(false);
+    setState('sleeping');
+    setShowDialogue(false);
+    if (isListening) {
+      stopListening();
     }
   };
-
-  // Enviar mensagem de texto
-  const handleSendMessage = (text: string) => {
-    sendMessage(text, false);
-  };
-
-  // Status badge
-  const getStatusBadge = () => {
-    if (isAISpeaking) return { text: 'Falando', variant: 'default' as const, className: 'bg-green-500' };
-    if (isProcessing) return { text: 'Pensando...', variant: 'secondary' as const, className: 'bg-yellow-500' };
-    if (voiceEnabled && voiceRecognition.status === 'listening') return { text: 'Ouvindo', variant: 'default' as const, className: 'bg-blue-500' };
-    return { text: 'Online', variant: 'outline' as const, className: '' };
-  };
-
-  const status = getStatusBadge();
 
   return (
     <>
-      {/* Botão flutuante */}
       <div className="fixed bottom-20 right-4 z-50">
-        <AnimatePresence>
-          {isOpen && (
+        <div className="relative">
+          {/* Dialogue bubble */}
+          <CharacterDialogue
+            text={dialogueText}
+            mood={mood}
+            isVisible={showDialogue}
+          />
+
+          {/* Character container */}
+          <motion.div
+            className="relative cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleCharacterClick}
+          >
+            {/* Background glow effect */}
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="mb-3"
-            >
-              <Card className="w-80 shadow-xl border-border/50 bg-card">
-                {/* Header */}
-                <CardHeader className="p-3 border-b border-border/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Bot className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm">NutriAI</h3>
-                        <Badge 
-                          variant={status.variant} 
-                          className={cn("text-[10px] px-1.5 py-0", status.className)}
-                        >
-                          {status.text}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={toggleVoice}
-                      >
-                        {voiceEnabled ? (
-                          <Mic className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <MicOff className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={toggleChat}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
+              className="absolute inset-0 rounded-full blur-xl"
+              style={{ 
+                background: `radial-gradient(circle, ${selectedCharacter.primaryColor}40 0%, transparent 70%)` 
+              }}
+              animate={{
+                scale: isActive ? [1, 1.1, 1] : 1,
+                opacity: isActive ? [0.5, 0.8, 0.5] : 0.3
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
 
-                {/* Mensagens */}
-                <CardContent className="p-0">
-                  <ScrollArea className="h-72 p-3">
-                    <div className="space-y-3">
-                      {messages.map((msg, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={cn(
-                            "flex",
-                            msg.role === 'user' ? 'justify-end' : 'justify-start'
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                              msg.role === 'user'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-foreground'
-                            )}
-                          >
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                            <span className="text-[10px] opacity-70 mt-1 block">
-                              {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </span>
-                          </div>
-                        </motion.div>
-                      ))}
-                      
-                      {/* Indicador de digitação */}
-                      {isProcessing && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex justify-start"
-                        >
-                          <div className="bg-muted rounded-lg px-3 py-2">
-                            <div className="flex gap-1">
-                              <span className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                              <span className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                              <span className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                      
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
+            {/* Character */}
+            <CharacterBase
+              character={selectedCharacter}
+              mood={mood}
+              state={state}
+              isSpeaking={isPlaying || isProcessing}
+              size={140}
+            />
 
-                  {/* Input */}
-                  <VoiceTextInput 
-                    onSend={handleSendMessage}
-                    disabled={isProcessing || isAISpeaking}
-                    placeholder="Digite sua mensagem..."
-                  />
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {/* Listening indicator */}
+            <AnimatePresence>
+              {isListening && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full p-2"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 0.5 }}
+                  >
+                    <Mic className="w-4 h-4 text-white" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
-        {/* Botão de toggle */}
-        <motion.button
-          onClick={toggleChat}
-          className={cn(
-            "w-14 h-14 rounded-full shadow-lg flex items-center justify-center",
-            "bg-primary hover:bg-primary/90 transition-colors",
-            isOpen && "bg-destructive hover:bg-destructive/90"
-          )}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isOpen ? (
-            <X className="w-6 h-6 text-primary-foreground" />
-          ) : (
-            <MessageCircle className="w-6 h-6 text-primary-foreground" />
-          )}
-        </motion.button>
+          {/* Control buttons */}
+          <AnimatePresence>
+            {isActive && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2"
+              >
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleVoice();
+                  }}
+                >
+                  {voiceEnabled ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <VolumeX className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectorOpen(true);
+                  }}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSleep();
+                  }}
+                >
+                  <span className="text-xs">💤</span>
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      <SaveRecipeDialog 
-        open={saveRecipeDialog}
-        onOpenChange={setSaveRecipeDialog}
-        recipeContent={selectedRecipeContent}
+      {/* Character selector modal */}
+      <CharacterSelector
+        open={selectorOpen}
+        onOpenChange={setSelectorOpen}
       />
     </>
   );
