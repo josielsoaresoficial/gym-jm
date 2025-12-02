@@ -13,11 +13,11 @@ const NutriCharacter = ({ isActive, isSpeaking, mood, size = 120 }: NutriCharact
   // Eye expressions based on mood and state
   const getEyeContent = () => {
     if (!isActive) {
-      // Sleeping - closed curved eyes
+      // Sleeping - relaxed closed eyes (u_u expression)
       return (
         <>
-          <path d="M75 100 Q85 90 95 100" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M125 100 Q135 90 145 100" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M75 98 Q85 108 95 98" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M125 98 Q135 108 145 98" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" />
         </>
       );
     }
