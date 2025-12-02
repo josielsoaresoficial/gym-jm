@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export type VoiceProvider = 'elevenlabs-male' | 'elevenlabs-female';
+export type VoiceProvider = 'google' | 'elevenlabs-male' | 'elevenlabs-female';
 
 export const useVoice = () => {
   const [isLoading, setIsLoading] = useState(false);

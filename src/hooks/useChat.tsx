@@ -22,7 +22,7 @@ interface Intent {
   data?: string;
 }
 
-export const useChat = (initialVoiceProvider: VoiceProvider = 'elevenlabs-male') => {
+export const useChat = (initialVoiceProvider: VoiceProvider = 'google') => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
