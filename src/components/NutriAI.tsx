@@ -1,20 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Volume2, VolumeX } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NutriCharacter, { CharacterMood } from './NutriCharacter';
 import { useChat } from '@/hooks/useChat';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { useVoice } from '@/hooks/useVoice';
 import { toast } from 'sonner';
 
 const NutriAI = () => {
-  const { messages, sendMessage, startConversation, isProcessing, currentMood } = useChat();
-  const { speak, isPlaying } = useVoice();
+  const { messages, sendMessage, startConversation, isProcessing, currentMood, isAISpeaking } = useChat();
   const [mood, setMood] = useState<CharacterMood>('neutral');
   const [dialogueText, setDialogueText] = useState('');
   const [showDialogue, setShowDialogue] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isActive, setIsActive] = useState(false);
 
   const voiceRecognition = useVoiceRecognition({
@@ -54,17 +51,13 @@ const NutriAI = () => {
     if (lastMessage && lastMessage.role === 'assistant') {
       setDialogueText(lastMessage.content.substring(0, 150) + (lastMessage.content.length > 150 ? '...' : ''));
       setShowDialogue(true);
-      
-      if (voiceEnabled && lastMessage.content) {
-        speak(lastMessage.content, 'elevenlabs-female');
-      }
 
       const timer = setTimeout(() => {
         setShowDialogue(false);
       }, 8000);
       return () => clearTimeout(timer);
     }
-  }, [messages, voiceEnabled, speak]);
+  }, [messages]);
 
   const handleUserMessage = useCallback(async (text: string) => {
     setMood('thinking');
@@ -102,11 +95,6 @@ const NutriAI = () => {
         setShowDialogue(true);
       }
     }
-  };
-
-  const toggleVoice = () => {
-    setVoiceEnabled(!voiceEnabled);
-    toast.info(voiceEnabled ? 'Voz desativada' : 'Voz ativada');
   };
 
   const handleSleep = () => {
@@ -160,7 +148,7 @@ const NutriAI = () => {
 
           <NutriCharacter
             isActive={isActive}
-            isSpeaking={isPlaying || isProcessing}
+            isSpeaking={isAISpeaking || isProcessing}
             mood={mood}
             size={140}
           />
@@ -194,22 +182,6 @@ const NutriAI = () => {
               exit={{ opacity: 0, y: 10 }}
               className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2"
             >
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleVoice();
-                }}
-              >
-                {voiceEnabled ? (
-                  <Volume2 className="h-4 w-4" />
-                ) : (
-                  <VolumeX className="h-4 w-4" />
-                )}
-              </Button>
-
               <Button
                 size="icon"
                 variant="outline"
