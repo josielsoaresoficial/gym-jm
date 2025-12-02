@@ -39,7 +39,7 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'elevenlabs-male')
   });
   const [currentMood, setCurrentMood] = useState<'neutral' | 'happy' | 'thinking' | 'excited' | 'grateful'>('neutral');
   
-  const { speak, isLoading: isVoiceLoading } = useVoice();
+  const { speak, isLoading: isVoiceLoading, isPlaying: isAISpeaking } = useVoice();
   const chatHistoryRef = useRef<Message[]>([]);
   const lastMessageRef = useRef<{ timestamp: number; content: string }>({ timestamp: 0, content: '' });
 
@@ -404,6 +404,7 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'elevenlabs-male')
     voiceProvider,
     setVoiceProvider,
     currentConversationId,
-    currentMood
+    currentMood,
+    isAISpeaking
   };
 };

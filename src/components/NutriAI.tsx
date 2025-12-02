@@ -10,11 +10,11 @@ const NutriAI = () => {
     sendMessage, 
     startConversation,
     isProcessing,
-    currentMood
+    currentMood,
+    isAISpeaking
   } = useChat('elevenlabs-male');
   
   const [isActive, setIsActive] = useState(false);
-  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [saveRecipeDialog, setSaveRecipeDialog] = useState(false);
   const [selectedRecipeContent, setSelectedRecipeContent] = useState('');
 
@@ -59,23 +59,6 @@ const NutriAI = () => {
       }
     }
   }, [messages]);
-
-  // Monitorar quando AI termina de falar
-  useEffect(() => {
-    const checkSpeaking = () => {
-      const isSpeaking = window.speechSynthesis.speaking;
-      if (isAISpeaking && !isSpeaking) {
-        console.log('✅ AI terminou de falar');
-        setIsAISpeaking(false);
-      } else if (!isAISpeaking && isSpeaking) {
-        console.log('🔊 AI começou a falar');
-        setIsAISpeaking(true);
-      }
-    };
-    
-    const interval = setInterval(checkSpeaking, 300);
-    return () => clearInterval(interval);
-  }, [isAISpeaking]);
 
   // Ativar/Desativar NutriAI
   const toggleNutriAI = async () => {

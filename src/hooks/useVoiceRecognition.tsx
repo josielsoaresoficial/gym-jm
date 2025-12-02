@@ -331,28 +331,49 @@ export const useVoiceRecognition = ({
     retryCountRef.current = 0;
   }, []);
 
-  // Iniciar/parar baseado em enabled
+  // Refs estáveis para funções (evitar loop infinito)
+  const startRef = useRef(start);
+  const stopRef = useRef(stop);
+  const startAudioLevelMonitoringRef = useRef(startAudioLevelMonitoring);
+  
+  // Atualizar refs quando funções mudarem
+  useEffect(() => {
+    startRef.current = start;
+    stopRef.current = stop;
+    startAudioLevelMonitoringRef.current = startAudioLevelMonitoring;
+  });
+
+  // Ref para rastrear enabled
+  const enabledRef = useRef(enabled);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  // Iniciar/parar baseado em enabled (sem dependências de funções)
   useEffect(() => {
     if (enabled && state.isSupported) {
       const timer = setTimeout(() => {
-        start();
-        startAudioLevelMonitoring();
+        startRef.current();
+        startAudioLevelMonitoringRef.current();
       }, 500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        stopRef.current();
+      };
     } else {
-      stop();
+      stopRef.current();
     }
-  }, [enabled, state.isSupported, start, stop, startAudioLevelMonitoring]);
+  }, [enabled, state.isSupported]);
 
   // Cleanup
   useEffect(() => {
     return () => {
-      stop();
+      stopRef.current();
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     };
-  }, [stop]);
+  }, []);
 
   return {
     ...state,
