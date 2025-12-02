@@ -34,7 +34,6 @@ import WorkoutHistory from "./pages/WorkoutHistory";
 import CustomWorkouts from "./pages/CustomWorkouts";
 import CustomFoods from "./pages/CustomFoods";
 import Diet21Days from "./pages/Diet21Days";
-import SelectRobot from "./pages/SelectRobot";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +75,6 @@ const AppContent = () => {
         <Route path="/custom-workouts" element={<ProtectedRoute><CustomWorkouts /></ProtectedRoute>} />
         <Route path="/custom-foods" element={<ProtectedRoute><CustomFoods /></ProtectedRoute>} />
         <Route path="/diet-21-days" element={<ProtectedRoute><Diet21Days /></ProtectedRoute>} />
-        <Route path="/select-robot" element={<ProtectedRoute><SelectRobot /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
