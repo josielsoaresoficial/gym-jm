@@ -66,7 +66,7 @@ export const useVoiceRecognition = ({
   silenceTimeout = 2000,
   onResult,
   onError,
-  enabled = true
+  enabled = false // Default FALSE - controlado externamente
 }: UseVoiceRecognitionOptions) => {
   const [state, setState] = useState<VoiceRecognitionState>({
     status: 'idle',
@@ -89,14 +89,38 @@ export const useVoiceRecognition = ({
   const lastProcessedTimeRef = useRef<number>(0);
   const lastProcessedTextRef = useRef<string>('');
   const processingFinalRef = useRef(false);
+  
+  // REFS ESTÁVEIS para evitar closures stale
+  const enabledRef = useRef(enabled);
+  const onResultRef = useRef(onResult);
+  const onErrorRef = useRef(onError);
+  
+  // Atualizar refs quando props mudarem
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+  
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+  
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   // Hook de detecção de atividade de voz (VAD)
   const voiceActivity = useVoiceActivityDetection({
     enabled: enabled && state.status === 'listening',
     onNoiseDetected: () => {
-      console.log('🔇 Ruído ambiental detectado - ignorando');
+      console.log('🔇 Ruído ambiental detectado');
     }
   });
+  
+  // Ref para VAD evitar closures stale
+  const voiceActivityRef = useRef(voiceActivity);
+  useEffect(() => {
+    voiceActivityRef.current = voiceActivity;
+  }, [voiceActivity]);
 
   // Atualizar estado com dados do VAD
   useEffect(() => {
@@ -168,20 +192,21 @@ export const useVoiceRecognition = ({
     return true;
   }, [isLikelyNoise]);
 
-  // Processar resultado final - VAD APENAS COMO CONSELHEIRO
+  // Processar resultado final - VAD APENAS COMO CONSELHEIRO (usa refs)
   const processFinalResult = useCallback((transcript: string, confidence: number) => {
+    const vad = voiceActivityRef.current;
+    
     // Debug VAD state
     console.log('📊 VAD State:', {
-      isActive: voiceActivity.isActive,
-      isNoise: voiceActivity.isNoise,
-      isVoiceDetected: voiceActivity.isVoiceDetected,
-      confidence: voiceActivity.confidence
+      isActive: vad.isActive,
+      isNoise: vad.isNoise,
+      isVoiceDetected: vad.isVoiceDetected,
+      confidence: vad.confidence
     });
 
     // VAD COMO CONSELHEIRO - NÃO BLOQUEIA, apenas loga
-    if (voiceActivity.isActive && voiceActivity.isNoise && voiceActivity.confidence > 0.8) {
-      console.log('⚠️ VAD indica possível ruído (confidence:', voiceActivity.confidence, ') - verificando filtros de texto');
-      // NÃO retorna - deixa os filtros de texto decidir
+    if (vad.isActive && vad.isNoise && vad.confidence > 0.8) {
+      console.log('⚠️ VAD indica possível ruído (confidence:', vad.confidence, ') - verificando filtros de texto');
     }
 
     // Filtro de confiança mínima MUITO RELAXADO (30%)
@@ -222,16 +247,17 @@ export const useVoiceRecognition = ({
       status: 'processing'
     }));
 
-    onResult?.(transcript, confidence);
+    // Usar ref para callback
+    onResultRef.current?.(transcript, confidence);
     
     // Voltar para listening após processar
     setTimeout(() => {
       processingFinalRef.current = false;
       setState(prev => prev.status === 'processing' ? { ...prev, status: 'listening' } : prev);
     }, 300);
-  }, [clearSilenceTimer, onResult, isValidContent, voiceActivity.isNoise, voiceActivity.isVoiceDetected, voiceActivity.confidence, voiceActivity.isActive]);
+  }, [clearSilenceTimer, isValidContent]); // Removidas dependências do VAD - usa refs
 
-  // Iniciar reconhecimento
+  // Iniciar reconhecimento (usa refs para evitar closures stale)
   const start = useCallback(() => {
     if (!state.isSupported) {
       setState(prev => ({ 
@@ -239,7 +265,7 @@ export const useVoiceRecognition = ({
         status: 'unsupported',
         error: 'Reconhecimento de voz não suportado neste navegador' 
       }));
-      onError?.('Reconhecimento de voz não suportado');
+      onErrorRef.current?.('Reconhecimento de voz não suportado');
       return;
     }
 
@@ -247,6 +273,8 @@ export const useVoiceRecognition = ({
       console.log('⚠️ Reconhecimento já ativo');
       return;
     }
+
+    console.log('🎤 Iniciando reconhecimento de voz...');
 
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -258,22 +286,22 @@ export const useVoiceRecognition = ({
       recognition.maxAlternatives = 3;
 
       recognition.onstart = () => {
-        console.log('🎤 Reconhecimento iniciado (com VAD)');
+        console.log('🎤 Reconhecimento ATIVO');
         isActiveRef.current = true;
         retryCountRef.current = 0;
         setState(prev => ({ ...prev, status: 'listening', error: null }));
       };
 
       recognition.onend = () => {
-        console.log('🔇 Reconhecimento encerrado');
+        console.log('🔇 Reconhecimento encerrado, enabled:', enabledRef.current);
         isActiveRef.current = false;
         
-        // Auto-reconexão com backoff exponencial
-        if (enabled && retryCountRef.current < 5) {
+        // Auto-reconexão usando ref
+        if (enabledRef.current && retryCountRef.current < 5) {
           const delay = Math.min(300 * Math.pow(2, retryCountRef.current), 5000);
           console.log(`🔄 Reconectando em ${delay}ms...`);
           setTimeout(() => {
-            if (enabled && !isActiveRef.current) {
+            if (enabledRef.current && !isActiveRef.current) {
               retryCountRef.current++;
               start();
             }
@@ -284,9 +312,11 @@ export const useVoiceRecognition = ({
       };
 
       recognition.onresult = (event: any) => {
-        // VAD NÃO BLOQUEIA MAIS - apenas loga para debug
-        if (voiceActivity.isActive && voiceActivity.isNoise) {
-          console.log('⚠️ VAD indica ruído, mas processando mesmo assim...');
+        const vad = voiceActivityRef.current;
+        
+        // VAD NÃO BLOQUEIA - apenas loga
+        if (vad.isActive && vad.isNoise) {
+          console.log('⚠️ VAD indica ruído, mas processando...');
         }
 
         clearSilenceTimer();
@@ -312,21 +342,14 @@ export const useVoiceRecognition = ({
         } else if (interimTranscript.trim() && !processingFinalRef.current) {
           setState(prev => ({ ...prev, interimTranscript: interimTranscript.trim() }));
           
-          // Cancelar timer anterior
           clearSilenceTimer();
           
-          // Timer de silêncio adaptativo com validação
           silenceTimerRef.current = setTimeout(() => {
-            // Não processar se já houve resultado final recente
-            if (processingFinalRef.current) {
-              console.log('⏭️ Ignorando interim - resultado final já processado');
-              return;
-            }
+            if (processingFinalRef.current) return;
             
             const currentInterim = interimTranscript.trim();
             const wordCount = currentInterim.split(' ').filter(w => w.length > 0).length;
             
-            // Só processar se tiver conteúdo significativo (2+ palavras ou 4+ caracteres)
             if (currentInterim && (wordCount >= 2 || currentInterim.length >= 4)) {
               console.log('⏱️ Processando por silêncio:', currentInterim);
               processFinalResult(currentInterim, 0.5);
@@ -356,12 +379,12 @@ export const useVoiceRecognition = ({
         }
         
         setState(prev => ({ ...prev, status: 'error', error: errorMessage }));
-        onError?.(errorMessage);
+        onErrorRef.current?.(errorMessage);
         
-        // Retry automático para erros recuperáveis
-        if (['no-speech', 'aborted'].includes(event.error) && enabled && retryCountRef.current < 3) {
+        // Retry automático usando ref
+        if (['no-speech', 'aborted'].includes(event.error) && enabledRef.current && retryCountRef.current < 3) {
           setTimeout(() => {
-            if (enabled) {
+            if (enabledRef.current) {
               retryCountRef.current++;
               start();
             }
@@ -379,9 +402,9 @@ export const useVoiceRecognition = ({
         status: 'error',
         error: 'Erro ao iniciar reconhecimento de voz'
       }));
-      onError?.('Erro ao iniciar reconhecimento de voz');
+      onErrorRef.current?.('Erro ao iniciar reconhecimento de voz');
     }
-  }, [state.isSupported, enabled, continuous, language, silenceTimeout, clearSilenceTimer, processFinalResult, onError, voiceActivity.isActive, voiceActivity.isNoise, voiceActivity.isVoiceDetected]);
+  }, [state.isSupported, continuous, language, silenceTimeout, clearSilenceTimer, processFinalResult]); // Removidas deps de callbacks e VAD
 
   // Parar reconhecimento
   const stop = useCallback(() => {
@@ -410,33 +433,32 @@ export const useVoiceRecognition = ({
     retryCountRef.current = 0;
   }, []);
 
-  // Refs estáveis para funções (evitar loop infinito)
+  // Refs estáveis para funções
   const startRef = useRef(start);
   const stopRef = useRef(stop);
   
-  // Atualizar refs quando funções mudarem
   useEffect(() => {
     startRef.current = start;
     stopRef.current = stop;
   });
 
-  // Ref para rastrear enabled
-  const enabledRef = useRef(enabled);
+  // Iniciar/parar baseado em enabled
   useEffect(() => {
-    enabledRef.current = enabled;
-  }, [enabled]);
-
-  // Iniciar/parar baseado em enabled (sem dependências de funções)
-  useEffect(() => {
+    console.log('🔄 Effect enabled changed:', enabled, 'isSupported:', state.isSupported);
+    
     if (enabled && state.isSupported) {
+      // Delay mínimo para garantir que tudo está pronto
       const timer = setTimeout(() => {
+        console.log('▶️ Auto-starting recognition...');
         startRef.current();
-      }, 500);
+      }, 300);
+      
       return () => {
         clearTimeout(timer);
+        console.log('⏹️ Auto-stopping recognition...');
         stopRef.current();
       };
-    } else {
+    } else if (!enabled) {
       stopRef.current();
     }
   }, [enabled, state.isSupported]);

@@ -10,20 +10,30 @@ const NutriAI = () => {
   const [mood, setMood] = useState<CharacterMood>('neutral');
   const [isActive, setIsActive] = useState(false);
 
+  // Controle via prop enabled - NÃO manual
   const voiceRecognition = useVoiceRecognition({
+    enabled: isActive && !isAISpeaking, // Automaticamente controla start/stop
     onResult: (text) => {
+      console.log('🎤 NutriAI recebeu texto:', text);
       if (text && text.trim().length > 0) {
         handleUserMessage(text);
       }
     },
     onError: (error) => {
+      console.error('❌ Erro voz:', error);
       toast.error('Erro no reconhecimento de voz: ' + error);
     }
   });
 
-  const isListening = voiceRecognition.status === 'listening';
-  const startListening = voiceRecognition.start;
-  const stopListening = voiceRecognition.stop;
+  // Debug state
+  useEffect(() => {
+    console.log('🤖 NutriAI State:', { 
+      isActive, 
+      isAISpeaking, 
+      voiceStatus: voiceRecognition.status,
+      shouldListen: isActive && !isAISpeaking
+    });
+  }, [isActive, isAISpeaking, voiceRecognition.status]);
 
   // Map chat mood to character mood
   useEffect(() => {
@@ -54,10 +64,7 @@ const NutriAI = () => {
       if (messages.length === 0) {
         await startConversation();
       }
-
-      setTimeout(() => {
-        startListening();
-      }, 1000);
+      // Não precisa chamar startListening - o hook controla automaticamente via enabled
     } else {
       handleSleep();
     }
@@ -66,9 +73,7 @@ const NutriAI = () => {
   const handleSleep = () => {
     setIsActive(false);
     setMood('neutral');
-    if (isListening) {
-      stopListening();
-    }
+    // Não precisa chamar stopListening - o hook controla automaticamente via enabled
   };
 
   return (
