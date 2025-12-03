@@ -433,6 +433,18 @@ export const useVoiceRecognition = ({
     retryCountRef.current = 0;
   }, []);
 
+  // Forçar reinício do reconhecimento
+  const forceRestart = useCallback(() => {
+    console.log('🔄 Force restart reconhecimento');
+    stop();
+    setTimeout(() => {
+      if (enabledRef.current) {
+        console.log('▶️ Reiniciando após forceRestart...');
+        start();
+      }
+    }, 200);
+  }, [stop, start]);
+
   // Refs estáveis para funções
   const startRef = useRef(start);
   const stopRef = useRef(stop);
@@ -447,11 +459,11 @@ export const useVoiceRecognition = ({
     console.log('🔄 Effect enabled changed:', enabled, 'isSupported:', state.isSupported);
     
     if (enabled && state.isSupported) {
-      // Delay mínimo para garantir que tudo está pronto
+      // Delay reduzido para resposta mais rápida
       const timer = setTimeout(() => {
         console.log('▶️ Auto-starting recognition...');
         startRef.current();
-      }, 300);
+      }, 100);
       
       return () => {
         clearTimeout(timer);
@@ -475,6 +487,7 @@ export const useVoiceRecognition = ({
     start,
     stop,
     resetError,
+    forceRestart,
     voiceActivity // Expor estado do VAD
   };
 };

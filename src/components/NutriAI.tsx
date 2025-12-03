@@ -35,6 +35,31 @@ const NutriAI = () => {
     });
   }, [isActive, isAISpeaking, voiceRecognition.status]);
 
+  // Escutar evento de fala finalizada para garantir reinício do reconhecimento
+  useEffect(() => {
+    const handleSpeechEnded = () => {
+      console.log('🔊 AI terminou de falar, verificando reconhecimento...');
+    };
+    
+    window.addEventListener('speechSynthesisEnded', handleSpeechEnded);
+    return () => window.removeEventListener('speechSynthesisEnded', handleSpeechEnded);
+  }, []);
+
+  // Reiniciar reconhecimento quando AI termina de falar
+  useEffect(() => {
+    if (isActive && !isAISpeaking && !isProcessing) {
+      console.log('🔄 AI parou de falar, verificando reconhecimento...');
+      // Se reconhecimento não está escutando, forçar reinício
+      if (voiceRecognition.status !== 'listening') {
+        const timer = setTimeout(() => {
+          console.log('🔄 Forçando reinício do reconhecimento...');
+          voiceRecognition.forceRestart?.();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isActive, isAISpeaking, isProcessing, voiceRecognition.status, voiceRecognition.forceRestart]);
+
   // Map chat mood to character mood
   useEffect(() => {
     if (currentMood) {
@@ -61,10 +86,12 @@ const NutriAI = () => {
       setIsActive(true);
       setMood('happy');
 
+      // Delay antes da fala inicial para dar tempo ao reconhecimento iniciar
       if (messages.length === 0) {
-        await startConversation();
+        setTimeout(async () => {
+          await startConversation();
+        }, 1500);
       }
-      // Não precisa chamar startListening - o hook controla automaticamente via enabled
     } else {
       handleSleep();
     }
@@ -73,12 +100,21 @@ const NutriAI = () => {
   const handleSleep = () => {
     setIsActive(false);
     setMood('neutral');
-    // Não precisa chamar stopListening - o hook controla automaticamente via enabled
   };
 
   return (
     <div className="fixed bottom-20 right-4 z-50">
       <div className="relative">
+        {/* Debug indicator - apenas em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute -top-24 left-0 text-xs bg-black/80 text-white p-2 rounded z-50 whitespace-nowrap">
+            <div>Active: {isActive ? '✅' : '❌'}</div>
+            <div>AISpeaking: {isAISpeaking ? '🔊' : '🔇'}</div>
+            <div>Voice: {voiceRecognition.status}</div>
+            <div>Enabled: {(isActive && !isAISpeaking) ? '✅' : '❌'}</div>
+          </div>
+        )}
+        
         <motion.div
           className="relative cursor-pointer"
           whileHover={{ scale: 1.02 }}
