@@ -596,6 +596,72 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          hydration_reminder_enabled: boolean | null
+          hydration_reminder_interval: number | null
+          id: string
+          last_hydration_reminder: string | null
+          last_meal_reminder: string | null
+          last_workout_reminder: string | null
+          meal_reminder_enabled: boolean | null
+          meal_reminder_times: string[] | null
+          motivation_reminder_enabled: boolean | null
+          motivation_reminder_time: string | null
+          updated_at: string
+          user_id: string
+          weight_reminder_day: number | null
+          weight_reminder_enabled: boolean | null
+          weight_reminder_time: string | null
+          workout_reminder_days: number[] | null
+          workout_reminder_enabled: boolean | null
+          workout_reminder_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          hydration_reminder_enabled?: boolean | null
+          hydration_reminder_interval?: number | null
+          id?: string
+          last_hydration_reminder?: string | null
+          last_meal_reminder?: string | null
+          last_workout_reminder?: string | null
+          meal_reminder_enabled?: boolean | null
+          meal_reminder_times?: string[] | null
+          motivation_reminder_enabled?: boolean | null
+          motivation_reminder_time?: string | null
+          updated_at?: string
+          user_id: string
+          weight_reminder_day?: number | null
+          weight_reminder_enabled?: boolean | null
+          weight_reminder_time?: string | null
+          workout_reminder_days?: number[] | null
+          workout_reminder_enabled?: boolean | null
+          workout_reminder_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          hydration_reminder_enabled?: boolean | null
+          hydration_reminder_interval?: number | null
+          id?: string
+          last_hydration_reminder?: string | null
+          last_meal_reminder?: string | null
+          last_workout_reminder?: string | null
+          meal_reminder_enabled?: boolean | null
+          meal_reminder_times?: string[] | null
+          motivation_reminder_enabled?: boolean | null
+          motivation_reminder_time?: string | null
+          updated_at?: string
+          user_id?: string
+          weight_reminder_day?: number | null
+          weight_reminder_enabled?: boolean | null
+          weight_reminder_time?: string | null
+          workout_reminder_days?: number[] | null
+          workout_reminder_enabled?: boolean | null
+          workout_reminder_time?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null

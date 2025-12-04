@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.clear-exercise-gifs]
 verify_jwt = false
+
+[functions.scheduled-reminders]
+verify_jwt = false

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/untyped";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { PushNotificationSettings } from "@/components/PushNotificationSettings";
+import NotificationSettingsCard from "@/components/NotificationSettingsCard";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { TrialTimer } from "@/components/TrialTimer";
 import { useProfileStats } from "@/hooks/useProfileStats";
@@ -602,8 +603,8 @@ const Profile = () => {
           </div>
         </GymCard>
 
-        {/* Push Notifications */}
-        <PushNotificationSettings />
+        {/* Notification Settings - Lembretes */}
+        <NotificationSettingsCard />
 
         {/* Achievements Section */}
         <AchievementsSection />
