@@ -1,13 +1,14 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Clock, TrendingUp, Calendar, Activity } from "lucide-react";
+import { ArrowLeft, Clock, TrendingUp, Calendar, Activity, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/untyped";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface WorkoutSession {
   id: string;
@@ -185,6 +186,75 @@ const WorkoutTimePage = () => {
                     <Progress value={(totalWeeklyMinutes / weeklyGoal) * 100} className="h-2" />
                   </div>
                 </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de Evolução Semanal */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                Evolução Semanal
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-64 w-full" />
+              ) : weeklyData && weeklyData.some(d => d.minutes > 0) ? (
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
+                      <XAxis 
+                        dataKey="day" 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                      />
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${value}min`}
+                      />
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                                <p className="font-medium text-foreground">{data.day}</p>
+                                <p className="text-primary font-bold">{data.minutes} minutos</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {data.exercises > 0 ? `${data.exercises} exercícios` : 'Dia de descanso'}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar 
+                        dataKey="minutes" 
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={50}
+                      >
+                        {weeklyData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`}
+                            fill={entry.minutes > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted))'}
+                            className={entry.minutes > 0 ? 'opacity-90 hover:opacity-100 transition-opacity' : 'opacity-40'}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
+                  <BarChart3 className="w-16 h-16 mb-4 opacity-30" />
+                  <p className="font-medium">Sem dados para exibir</p>
+                  <p className="text-sm">Complete treinos para ver seu gráfico de evolução</p>
+                </div>
               )}
             </CardContent>
           </Card>
