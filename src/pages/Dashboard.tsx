@@ -14,8 +14,10 @@ import {
   useOptimizedProfile,
   useOptimizedTodayNutrition,
   useOptimizedCaloriesBurned,
-  useOptimizedWeeklyProgress
+  useOptimizedWeeklyProgress,
+  useOptimizedTodayWorkoutTime
 } from "@/hooks/useOptimizedQuery";
+import { useHydration } from "@/hooks/useHydration";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -24,6 +26,8 @@ const Dashboard = () => {
   const { data: nutritionData = { calories: 0, protein: 0, carbs: 0, fat: 0 }, isLoading: loadingNutrition } = useOptimizedTodayNutrition();
   const { data: caloriesBurned = 0, isLoading: loadingCalories } = useOptimizedCaloriesBurned();
   const { data: weeklyProgress, isLoading: loadingWeekly } = useOptimizedWeeklyProgress();
+  const { data: workoutTime = 0, isLoading: loadingWorkoutTime } = useOptimizedTodayWorkoutTime();
+  const { todayHydrationLiters, isLoading: loadingHydration } = useHydration();
 
   // Nome formatado do usuário
   const userName = profile?.name 
@@ -84,15 +88,19 @@ const Dashboard = () => {
             </div>
           </Link>
           
-          {/* Água Consumida - estático, sem loading */}
+          {/* Água Consumida - dados reais */}
           <Link to="/stats/hydration">
             <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-              <StatCard 
-                icon={<Droplets className="w-6 h-6" />} 
-                title="Água Consumida" 
-                value="1.8L" 
-                variant="default" 
-              />
+              {loadingHydration ? (
+                <Skeleton className="h-20 w-full rounded-lg" />
+              ) : (
+                <StatCard 
+                  icon={<Droplets className="w-6 h-6" />} 
+                  title="Água Consumida" 
+                  value={`${todayHydrationLiters}L`} 
+                  variant="default" 
+                />
+              )}
             </div>
           </Link>
           
@@ -112,15 +120,19 @@ const Dashboard = () => {
             </div>
           </Link>
           
-          {/* Tempo de Treino - estático, sem loading */}
+          {/* Tempo de Treino - dados reais */}
           <Link to="/stats/workout-time">
             <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-              <StatCard 
-                icon={<ClockIcon className="w-6 h-6" />} 
-                title="Tempo de Treino" 
-                value="45min" 
-                variant="fitness" 
-              />
+              {loadingWorkoutTime ? (
+                <Skeleton className="h-20 w-full rounded-lg" />
+              ) : (
+                <StatCard 
+                  icon={<ClockIcon className="w-6 h-6" />} 
+                  title="Tempo de Treino" 
+                  value={`${workoutTime}min`} 
+                  variant="fitness" 
+                />
+              )}
             </div>
           </Link>
         </div>

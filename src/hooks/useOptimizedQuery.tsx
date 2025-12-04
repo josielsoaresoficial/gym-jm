@@ -188,15 +188,39 @@ export const useOptimizedCaloriesBurned = () => {
   return useOptimizedQuery(
     ['calories-burned', 'today'],
     async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
       const { data, error } = await supabase
-        .from('calories_burned')
-        .select('calories')
+        .from('workout_history')
+        .select('calories_burned')
         .eq('user_id', user?.id)
-        .eq('date', today);
+        .gte('completed_at', todayStart.toISOString());
       
       if (error) throw error;
-      return data?.reduce((sum, record) => sum + record.calories, 0) || 0;
+      return data?.reduce((sum, workout) => sum + (workout.calories_burned || 0), 0) || 0;
+    },
+    { staleTime: 1000 * 60 * 2 } // 2 min cache
+  );
+};
+
+export const useOptimizedTodayWorkoutTime = () => {
+  const { user } = useAuth();
+  
+  return useOptimizedQuery(
+    ['workout-time', 'today'],
+    async () => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from('workout_history')
+        .select('duration_minutes')
+        .eq('user_id', user?.id)
+        .gte('completed_at', todayStart.toISOString());
+      
+      if (error) throw error;
+      return data?.reduce((sum, workout) => sum + (workout.duration_minutes || 0), 0) || 0;
     },
     { staleTime: 1000 * 60 * 2 } // 2 min cache
   );
