@@ -110,6 +110,15 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
     localStorage.setItem(globalSettingsKey, JSON.stringify({ labelSize, lineWidth }));
   }, [labelSize, lineWidth, globalSettingsKey]);
 
+  // Auto-save labels com debounce quando mudam (posições, configurações individuais, etc.)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem(storageKey, JSON.stringify(labels));
+    }, 300); // 300ms debounce para não salvar a cada pixel durante drag
+    
+    return () => clearTimeout(timeoutId);
+  }, [labels, storageKey]);
+
   const toggleEditMode = () => {
     const newEditMode = !isEditing;
     setIsEditing(newEditMode);
@@ -123,7 +132,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
 
   const handleSavePositions = () => {
     localStorage.setItem(storageKey, JSON.stringify(labels));
-    toast.success("Posições salvas com sucesso!");
+    toast.success("Posições salvas! (O salvamento é automático)");
   };
 
   const handleResetPositions = () => {
@@ -219,6 +228,10 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   };
 
   const handleDragEnd = () => {
+    if (draggedLabel) {
+      // Salvar imediatamente quando termina o drag
+      localStorage.setItem(storageKey, JSON.stringify(labels));
+    }
     setDraggedLabel(null);
   };
 
