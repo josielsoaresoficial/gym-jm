@@ -21,7 +21,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const motivationalMessage = useMotivationalMessage();
   const { data: profile, isLoading: loadingProfile } = useOptimizedProfile();
-  const { data: nutritionData, isLoading: loadingNutrition } = useOptimizedTodayNutrition();
+  const { data: nutritionData = { calories: 0, protein: 0, carbs: 0, fat: 0 }, isLoading: loadingNutrition } = useOptimizedTodayNutrition();
   const { data: caloriesBurned = 0, isLoading: loadingCalories } = useOptimizedCaloriesBurned();
   const { data: weeklyProgress, isLoading: loadingWeekly } = useOptimizedWeeklyProgress();
 
@@ -32,31 +32,18 @@ const Dashboard = () => {
 
   const proteinGoal = profile?.daily_protein_goal || 120;
   const proteinPercentage = proteinGoal > 0 ? Math.round((nutritionData.protein / proteinGoal) * 100) : 0;
-  
-  const isLoading = loadingProfile || loadingNutrition || loadingCalories || loadingWeekly;
-  
-  const todayStats = [
-    { icon: <Flame className="w-6 h-6" />, title: "Calorias Queimadas", value: `${caloriesBurned}`, change: caloriesBurned > 0 ? `${caloriesBurned} kcal` : "0 kcal", variant: "fitness" as const, link: "/stats/calories-burned" },
-    { icon: <Droplets className="w-6 h-6" />, title: "Água Consumida", value: "1.8L", change: "+5%", variant: "default" as const, link: "/stats/hydration" },
-    { icon: <Target className="w-6 h-6" />, title: "Meta de Proteína", value: `${Math.round(nutritionData.protein)}g`, change: `${proteinPercentage}% da meta`, variant: "nutrition" as const, link: "/stats/protein-goal" },
-    { icon: <ClockIcon className="w-6 h-6" />, title: "Tempo de Treino", value: "45min", variant: "fitness" as const, link: "/stats/workout-time" },
-  ];
 
   return (
     <Layout>
       <WelcomeVoice />
       <div className="w-full px-4 py-6 space-y-6 max-w-7xl mx-auto">
-        {/* Header */}
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-6 w-96" />
-          </div>
-        ) : (
+        {/* Header - carrega independente, só depende do profile */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
           <div className="flex-1">
             <div className="flex items-center justify-between gap-2">
-              <h1 className="text-3xl font-bold">Olá, {userName}! 👋</h1>
+              <h1 className="text-3xl font-bold">
+                Olá, {loadingProfile ? <Skeleton className="inline-block h-8 w-24" /> : `${userName}!`} 👋
+              </h1>
               <div className="md:hidden">
                 <ThemeSelector />
               </div>
@@ -78,29 +65,65 @@ const Dashboard = () => {
             </Link>
           </div>
         </div>
-        )}
 
-        {/* Stats Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </div>
-        ) : (
+        {/* Stats Grid - cada card carrega independentemente */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
-          {todayStats.map((stat, index) => (
-            <Link key={index} to={stat.link}>
-              <div 
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <StatCard {...stat} />
-              </div>
-            </Link>
-          ))}
+          {/* Calorias Queimadas - depende de loadingCalories */}
+          <Link to="/stats/calories-burned">
+            <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+              {loadingCalories ? (
+                <Skeleton className="h-20 w-full rounded-lg" />
+              ) : (
+                <StatCard 
+                  icon={<Flame className="w-6 h-6" />} 
+                  title="Calorias Queimadas" 
+                  value={`${caloriesBurned}`} 
+                  variant="fitness" 
+                />
+              )}
+            </div>
+          </Link>
+          
+          {/* Água Consumida - estático, sem loading */}
+          <Link to="/stats/hydration">
+            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <StatCard 
+                icon={<Droplets className="w-6 h-6" />} 
+                title="Água Consumida" 
+                value="1.8L" 
+                variant="default" 
+              />
+            </div>
+          </Link>
+          
+          {/* Meta de Proteína - depende de loadingNutrition */}
+          <Link to="/stats/protein-goal">
+            <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              {loadingNutrition ? (
+                <Skeleton className="h-20 w-full rounded-lg" />
+              ) : (
+                <StatCard 
+                  icon={<Target className="w-6 h-6" />} 
+                  title="Meta de Proteína" 
+                  value={`${Math.round(nutritionData.protein)}g`} 
+                  variant="nutrition" 
+                />
+              )}
+            </div>
+          </Link>
+          
+          {/* Tempo de Treino - estático, sem loading */}
+          <Link to="/stats/workout-time">
+            <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+              <StatCard 
+                icon={<ClockIcon className="w-6 h-6" />} 
+                title="Tempo de Treino" 
+                value="45min" 
+                variant="fitness" 
+              />
+            </div>
+          </Link>
         </div>
-        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
@@ -153,7 +176,7 @@ const Dashboard = () => {
             </div>
           </GymCard>
 
-          {/* Nutrition Summary */}
+          {/* Nutrition Summary - carrega independente */}
           <GymCard 
             variant="nutrition"
             title="Resumo Nutricional"
@@ -161,11 +184,17 @@ const Dashboard = () => {
           >
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary">{Math.round(nutritionData.calories)}</div>
+                {loadingNutrition ? (
+                  <Skeleton className="h-10 w-20 mx-auto mb-2" />
+                ) : (
+                  <div className="text-3xl font-bold text-secondary">{Math.round(nutritionData.calories)}</div>
+                )}
                 <div className="text-sm text-muted-foreground">kcal consumidas</div>
-                <div className={`text-xs mt-1 ${2200 - nutritionData.calories >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {Math.abs(Math.round(2200 - nutritionData.calories))} kcal {2200 - nutritionData.calories >= 0 ? 'restantes' : 'acima'}
-                </div>
+                {!loadingNutrition && (
+                  <div className={`text-xs mt-1 ${2200 - nutritionData.calories >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {Math.abs(Math.round(2200 - nutritionData.calories))} kcal {2200 - nutritionData.calories >= 0 ? 'restantes' : 'acima'}
+                  </div>
+                )}
               </div>
               
               <div className="space-y-3">
@@ -204,7 +233,7 @@ const Dashboard = () => {
           </GymCard>
         </div>
 
-        {/* Weekly Progress */}
+        {/* Weekly Progress - carrega independente */}
         <GymCard 
           title="Progresso Semanal"
           description="Sua evolução nos últimos 7 dias"
@@ -212,19 +241,31 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-4 rounded-lg bg-gradient-fitness-subtle">
               <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary">{weeklyProgress?.workoutsCompleted || 0}</div>
+              {loadingWeekly ? (
+                <Skeleton className="h-8 w-12 mx-auto mb-1" />
+              ) : (
+                <div className="text-2xl font-bold text-primary">{weeklyProgress?.workoutsCompleted || 0}</div>
+              )}
               <div className="text-sm text-muted-foreground">Treinos Completos</div>
             </div>
             
             <div className="text-center p-4 rounded-lg bg-gradient-nutrition-subtle">
               <Target className="w-8 h-8 text-secondary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-secondary">{weeklyProgress?.calorieGoalPercentage || 0}%</div>
+              {loadingWeekly ? (
+                <Skeleton className="h-8 w-12 mx-auto mb-1" />
+              ) : (
+                <div className="text-2xl font-bold text-secondary">{weeklyProgress?.calorieGoalPercentage || 0}%</div>
+              )}
               <div className="text-sm text-muted-foreground">Meta Calórica</div>
             </div>
             
             <div className="text-center p-4 rounded-lg bg-muted">
               <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <div className="text-2xl font-bold">{weeklyProgress?.consecutiveDays || 0}</div>
+              {loadingWeekly ? (
+                <Skeleton className="h-8 w-12 mx-auto mb-1" />
+              ) : (
+                <div className="text-2xl font-bold">{weeklyProgress?.consecutiveDays || 0}</div>
+              )}
               <div className="text-sm text-muted-foreground">Dias Consecutivos</div>
             </div>
           </div>
