@@ -18,6 +18,7 @@ import {
   useOptimizedTodayWorkoutTime
 } from "@/hooks/useOptimizedQuery";
 import { useHydration } from "@/hooks/useHydration";
+import { useTodayWorkout } from "@/hooks/useTodayWorkout";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const { data: weeklyProgress, isLoading: loadingWeekly } = useOptimizedWeeklyProgress();
   const { data: workoutTime = 0, isLoading: loadingWorkoutTime } = useOptimizedTodayWorkoutTime();
   const { todayHydrationLiters, isLoading: loadingHydration } = useHydration();
+  const { data: todayWorkout, isLoading: loadingTodayWorkout } = useTodayWorkout();
 
   // Nome formatado do usuário
   const userName = profile?.name 
@@ -143,49 +145,74 @@ const Dashboard = () => {
           <GymCard 
             variant="fitness"
             title="Treino de Hoje"
-            description="Peito e Tríceps - Hipertrofia"
+            description={todayWorkout ? `${todayWorkout.workoutName} - ${todayWorkout.workoutCategory}` : "Nenhum treino iniciado"}
             className="lg:col-span-2"
           >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Progresso</span>
-                <span className="text-sm font-medium">3/5 exercícios</span>
+            {loadingTodayWorkout ? (
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
-              <Progress value={60} className="h-2" />
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-fitness-subtle">
-                  <div>
-                    <p className="font-medium">Supino reto com barra</p>
-                    <p className="text-sm text-muted-foreground">3x12 - 70kg</p>
-                  </div>
-                  <div className="text-green-500 text-xl">✓</div>
+            ) : todayWorkout ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Progresso</span>
+                  <span className="text-sm font-medium">{todayWorkout.completedCount}/{todayWorkout.totalCount} exercícios</span>
+                </div>
+                <Progress value={todayWorkout.progressPercentage} className="h-2" />
+                
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {todayWorkout.exercises.slice(0, 5).map((exercise) => (
+                    <div 
+                      key={exercise.id}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        exercise.completed 
+                          ? 'bg-gradient-fitness-subtle' 
+                          : 'border border-primary/20'
+                      }`}
+                    >
+                      <div>
+                        <p className={`font-medium ${!exercise.completed ? 'text-primary' : ''}`}>
+                          {exercise.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {exercise.sets}x{exercise.reps}
+                          {exercise.weight ? ` - ${exercise.weight}kg` : ''}
+                        </p>
+                      </div>
+                      <div className={exercise.completed ? 'text-green-500 text-xl' : 'text-primary'}>
+                        {exercise.completed ? '✓' : '⏳'}
+                      </div>
+                    </div>
+                  ))}
+                  {todayWorkout.exercises.length > 5 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      +{todayWorkout.exercises.length - 5} exercícios
+                    </p>
+                  )}
                 </div>
                 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-fitness-subtle">
-                  <div>
-                    <p className="font-medium">Supino inclinado</p>
-                    <p className="text-sm text-muted-foreground">3x10 - 60kg</p>
-                  </div>
-                  <div className="text-green-500 text-xl">✓</div>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-lg border border-primary/20">
-                  <div>
-                    <p className="font-medium text-primary">Crucifixo com halteres</p>
-                    <p className="text-sm text-muted-foreground">3x12 - 20kg</p>
-                  </div>
-                  <div className="text-primary">⏳</div>
-                </div>
+                <Link to="/workouts">
+                  <Button variant="fitness" className="w-full">
+                    <Zap className="w-4 h-4" />
+                    {todayWorkout.isCompleted ? 'Ver Detalhes' : 'Continuar Treino'}
+                  </Button>
+                </Link>
               </div>
-              
-              <Link to="/workouts">
-                <Button variant="fitness" className="w-full">
-                  <Zap className="w-4 h-4" />
-                  Continuar Treino
-                </Button>
-              </Link>
-            </div>
+            ) : (
+              <div className="space-y-4 text-center py-6">
+                <p className="text-muted-foreground">Você ainda não iniciou nenhum treino hoje.</p>
+                <Link to="/workouts">
+                  <Button variant="fitness">
+                    <Plus className="w-4 h-4" />
+                    Começar Treino
+                  </Button>
+                </Link>
+              </div>
+            )}
           </GymCard>
 
           {/* Nutrition Summary - carrega independente */}
