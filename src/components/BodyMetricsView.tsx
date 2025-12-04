@@ -15,6 +15,7 @@ import { UpdateMetricsDialog } from "./UpdateMetricsDialog";
 import { AddMeasurementsDialog } from "./AddMeasurementsDialog";
 import { AddAdvancedMetricsDialog } from "./AddAdvancedMetricsDialog";
 import { AddBodyPhotoDialog } from "./AddBodyPhotoDialog";
+import { PhotoComparisonOverlay } from "./PhotoComparisonOverlay";
 import { SetWeightGoalDialog } from "./SetWeightGoalDialog";
 import { BodyProgressReportDialog } from "./BodyProgressReportDialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
@@ -360,11 +361,35 @@ export const BodyMetricsView = () => {
         </TabsContent>
 
         <TabsContent value="medidas" className="space-y-6 mt-6">
-          {/* Fotos de Progresso */}
+          {/* Comparação Antes/Depois */}
+          {photos.length >= 2 && (() => {
+            const sortedPhotos = [...photos].sort((a, b) => 
+              new Date(a.photo_date).getTime() - new Date(b.photo_date).getTime()
+            );
+            const firstPhoto = sortedPhotos[0];
+            const lastPhoto = sortedPhotos[sortedPhotos.length - 1];
+            
+            return (
+              <PhotoComparisonOverlay
+                firstPhoto={{
+                  url: firstPhoto.photo_url,
+                  date: format(new Date(firstPhoto.photo_date), "d 'de' MMM 'de' yyyy", { locale: ptBR }),
+                  weight: firstPhoto.weight_at_photo || undefined
+                }}
+                lastPhoto={{
+                  url: lastPhoto.photo_url,
+                  date: format(new Date(lastPhoto.photo_date), "d 'de' MMM 'de' yyyy", { locale: ptBR }),
+                  weight: lastPhoto.weight_at_photo || undefined
+                }}
+              />
+            );
+          })()}
+
+          {/* Galeria de Fotos */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Fotos de Progresso</CardTitle>
+                <CardTitle>Galeria de Fotos</CardTitle>
                 <AddBodyPhotoDialog
                   onUpload={uploadPhoto}
                   trigger={
@@ -376,41 +401,62 @@ export const BodyMetricsView = () => {
                 />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               {photos.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="relative group">
-                      <img
-                        src={photo.photo_url}
-                        alt={`Foto ${photo.photo_type}`}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          onClick={() => deletePhoto(photo.id, photo.photo_url)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                <>
+                  {/* Filtros por tipo */}
+                  {['front', 'back', 'side'].map(type => {
+                    const typePhotos = photos.filter(p => p.photo_type === type);
+                    if (typePhotos.length === 0) return null;
+                    
+                    const typeLabel = type === 'front' ? 'Frontal' : type === 'back' ? 'Costas' : 'Lateral';
+                    
+                    return (
+                      <div key={type} className="space-y-3">
+                        <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <Image className="h-4 w-4" />
+                          {typeLabel} ({typePhotos.length})
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {typePhotos.map((photo) => (
+                            <div key={photo.id} className="relative group">
+                              <img
+                                src={photo.photo_url}
+                                alt={`Foto ${photo.photo_type}`}
+                                className="w-full h-40 object-cover rounded-lg border border-border"
+                              />
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                  className="h-8 w-8"
+                                  onClick={() => deletePhoto(photo.id, photo.photo_url)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent rounded-b-lg">
+                                <div className="text-xs text-white">
+                                  {format(new Date(photo.photo_date), "dd/MM/yyyy", { locale: ptBR })}
+                                </div>
+                                {photo.weight_at_photo && (
+                                  <div className="text-xs text-white/80">
+                                    {photo.weight_at_photo} kg
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="absolute bottom-2 left-2 right-2">
-                        <Badge className="bg-background/80 text-foreground">
-                          {photo.photo_type === 'front' ? 'Frontal' : photo.photo_type === 'back' ? 'Costas' : 'Lateral'}
-                        </Badge>
-                        {photo.weight_at_photo && (
-                          <Badge className="bg-background/80 text-foreground ml-2">
-                            {photo.weight_at_photo} kg
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    );
+                  })}
+                </>
               ) : (
                 <div className="text-center text-muted-foreground py-12">
-                  Adicione fotos para acompanhar seu progresso visual
+                  <Image className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Adicione fotos para acompanhar seu progresso visual</p>
+                  <p className="text-sm mt-1">Tire fotos frontal, lateral e de costas regularmente</p>
                 </div>
               )}
             </CardContent>
