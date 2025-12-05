@@ -37,25 +37,25 @@ interface MuscleLabel {
 }
 
 const frontLabels: MuscleLabel[] = [
-  { name: "Peitoral", muscle: "chest", side: "right", top: "20%" },
-  { name: "Ombros", muscle: "shoulders", side: "left", top: "16%" },
-  { name: "Bíceps", muscle: "biceps", side: "left", top: "30%" },
-  { name: "Abdômen", muscle: "abs", side: "right", top: "36%" },
-  { name: "Antebraços", muscle: "forearms", side: "right", top: "48%" },
-  { name: "Oblíquos", muscle: "obliques", side: "left", top: "44%" },
-  { name: "Quadríceps", muscle: "legs", side: "left", top: "62%" },
-  { name: "Adutores", muscle: "adductors", side: "right", top: "62%" },
-  { name: "Panturrilhas", muscle: "calves", side: "right", top: "78%" },
+  { name: "Peitoral", muscle: "chest", side: "right", top: "20%", lineWidth: 50 },
+  { name: "Ombros", muscle: "shoulders", side: "left", top: "16%", lineWidth: 45 },
+  { name: "Bíceps", muscle: "biceps", side: "left", top: "30%", lineWidth: 35 },
+  { name: "Abdômen", muscle: "abs", side: "right", top: "36%", lineWidth: 55 },
+  { name: "Antebraços", muscle: "forearms", side: "right", top: "48%", lineWidth: 30 },
+  { name: "Oblíquos", muscle: "obliques", side: "left", top: "44%", lineWidth: 40 },
+  { name: "Quadríceps", muscle: "legs", side: "left", top: "62%", lineWidth: 50 },
+  { name: "Adutores", muscle: "adductors", side: "right", top: "62%", lineWidth: 50 },
+  { name: "Panturrilhas", muscle: "calves", side: "right", top: "78%", lineWidth: 55 },
 ];
 
 const backLabels: MuscleLabel[] = [
-  { name: "Trapézio", muscle: "traps", side: "right", top: "14%" },
-  { name: "Dorsais", muscle: "back", side: "right", top: "28%" },
-  { name: "Tríceps", muscle: "triceps", side: "left", top: "28%" },
-  { name: "Lombares", muscle: "lower_back", side: "left", top: "42%" },
-  { name: "Glúteos", muscle: "glutes", side: "right", top: "48%" },
-  { name: "Isquiotibiais", muscle: "hamstrings", side: "left", top: "62%" },
-  { name: "Panturrilhas", muscle: "calves", side: "right", top: "76%" },
+  { name: "Trapézio", muscle: "traps", side: "right", top: "14%", lineWidth: 45 },
+  { name: "Dorsais", muscle: "back", side: "right", top: "28%", lineWidth: 40 },
+  { name: "Tríceps", muscle: "triceps", side: "left", top: "28%", lineWidth: 35 },
+  { name: "Lombares", muscle: "lower_back", side: "left", top: "42%", lineWidth: 45 },
+  { name: "Glúteos", muscle: "glutes", side: "right", top: "48%", lineWidth: 50 },
+  { name: "Isquiotibiais", muscle: "hamstrings", side: "left", top: "62%", lineWidth: 45 },
+  { name: "Panturrilhas", muscle: "calves", side: "right", top: "76%", lineWidth: 50 },
 ];
 
 export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: WorkoutMuscleMapProps) {

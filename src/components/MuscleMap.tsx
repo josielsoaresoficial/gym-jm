@@ -15,28 +15,36 @@ interface MuscleLabel {
   top: string;
 }
 
+interface MuscleLabel {
+  name: string;
+  muscle: MuscleGroup;
+  side: "left" | "right";
+  top: string;
+  lineWidth?: number;
+}
+
 const frontLabels: MuscleLabel[] = [
-  { name: "Ombros", muscle: "ombros", side: "left", top: "18%" },
-  { name: "Bíceps", muscle: "biceps", side: "left", top: "32%" },
-  { name: "Oblíquos", muscle: "obliquos", side: "left", top: "46%" },
-  { name: "Abdutores", muscle: "abdutores", side: "left", top: "60%" },
-  { name: "Quadríceps", muscle: "quadriceps", side: "left", top: "74%" },
-  { name: "Peitoral", muscle: "peitoral", side: "right", top: "22%" },
-  { name: "Abdômen", muscle: "abdomen", side: "right", top: "38%" },
-  { name: "Antebraços", muscle: "antebracos", side: "right", top: "52%" },
-  { name: "Adutores", muscle: "adutores", side: "right", top: "66%" },
-  { name: "Cardio", muscle: "cardio", side: "right", top: "80%" },
+  { name: "Ombros", muscle: "ombros", side: "left", top: "18%", lineWidth: 50 },
+  { name: "Bíceps", muscle: "biceps", side: "left", top: "32%", lineWidth: 40 },
+  { name: "Oblíquos", muscle: "obliquos", side: "left", top: "46%", lineWidth: 45 },
+  { name: "Abdutores", muscle: "abdutores", side: "left", top: "60%", lineWidth: 50 },
+  { name: "Quadríceps", muscle: "quadriceps", side: "left", top: "74%", lineWidth: 55 },
+  { name: "Peitoral", muscle: "peitoral", side: "right", top: "22%", lineWidth: 55 },
+  { name: "Abdômen", muscle: "abdomen", side: "right", top: "38%", lineWidth: 50 },
+  { name: "Antebraços", muscle: "antebracos", side: "right", top: "52%", lineWidth: 35 },
+  { name: "Adutores", muscle: "adutores", side: "right", top: "66%", lineWidth: 50 },
+  { name: "Cardio", muscle: "cardio", side: "right", top: "80%", lineWidth: 60 },
 ];
 
 const backLabels: MuscleLabel[] = [
-  { name: "Trapézio", muscle: "trapezio", side: "right", top: "16%" },
-  { name: "Tríceps", muscle: "triceps", side: "left", top: "30%" },
-  { name: "Dorsais", muscle: "dorsais", side: "right", top: "32%" },
-  { name: "Lombares", muscle: "lombares", side: "left", top: "46%" },
-  { name: "Glúteos", muscle: "gluteos", side: "right", top: "52%" },
-  { name: "Isquiotibiais", muscle: "isquiotibiais", side: "left", top: "66%" },
-  { name: "Cardio", muscle: "cardio", side: "right", top: "70%" },
-  { name: "Panturrilhas", muscle: "panturrilhas", side: "left", top: "84%" },
+  { name: "Trapézio", muscle: "trapezio", side: "right", top: "16%", lineWidth: 50 },
+  { name: "Tríceps", muscle: "triceps", side: "left", top: "30%", lineWidth: 40 },
+  { name: "Dorsais", muscle: "dorsais", side: "right", top: "32%", lineWidth: 45 },
+  { name: "Lombares", muscle: "lombares", side: "left", top: "46%", lineWidth: 50 },
+  { name: "Glúteos", muscle: "gluteos", side: "right", top: "52%", lineWidth: 55 },
+  { name: "Isquiotibiais", muscle: "isquiotibiais", side: "left", top: "66%", lineWidth: 50 },
+  { name: "Cardio", muscle: "cardio", side: "right", top: "70%", lineWidth: 60 },
+  { name: "Panturrilhas", muscle: "panturrilhas", side: "left", top: "84%", lineWidth: 55 },
 ];
 
 export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapProps) {
@@ -71,12 +79,12 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
               <div className={`flex items-center ${label.side === "left" ? "flex-row" : "flex-row-reverse"} gap-1`}>
                 {/* Label Text */}
                 <div
-                  className={`text-sm font-medium text-black px-2 py-1 whitespace-nowrap ${
+                  className={`text-sm font-medium px-2 py-1 whitespace-nowrap ${
                     label.side === "left" ? "text-left" : "text-right"
                   } ${
                     selectedMuscle === label.muscle
-                      ? "font-bold text-[#FF9F66]"
-                      : "group-hover:font-semibold group-hover:text-[#FF9F66]"
+                      ? "font-bold text-primary"
+                      : "text-foreground group-hover:font-semibold group-hover:text-primary"
                   } transition-all duration-200`}
                 >
                   {label.name}
@@ -86,13 +94,13 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
                 <div className="relative flex items-center">
                   <div
                     className={`h-[1px] ${
-                      selectedMuscle === label.muscle ? "bg-[#FF9F66]" : "bg-gray-400 group-hover:bg-[#FF9F66]"
+                      selectedMuscle === label.muscle ? "bg-primary" : "bg-muted-foreground group-hover:bg-primary"
                     } transition-colors duration-200`}
-                    style={{ width: "40px" }}
+                    style={{ width: `${label.lineWidth || 40}px` }}
                   />
                   <div
-                    className={`w-2 h-2 ${
-                      selectedMuscle === label.muscle ? "bg-[#FF9F66]" : "bg-gray-400 group-hover:bg-[#FF9F66]"
+                    className={`w-2 h-2 rounded-full ${
+                      selectedMuscle === label.muscle ? "bg-primary" : "bg-muted-foreground group-hover:bg-primary"
                     } transition-colors duration-200`}
                   />
                 </div>
