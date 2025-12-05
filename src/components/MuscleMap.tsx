@@ -51,18 +51,30 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
   const labels = view === "front" ? frontLabels : backLabels;
 
   return (
-    <div className="relative w-full flex items-center justify-center py-8">
+    <div className="relative w-full flex items-center justify-center py-8" style={{ perspective: "1000px" }}>
       {/* Container with fixed max-width for consistent sizing */}
-      <div className="relative w-full max-w-[600px] flex items-center justify-center">
+      <motion.div 
+        className="relative w-full max-w-[600px] flex items-center justify-center"
+        initial={false}
+        animate={{ rotateY: view === "front" ? 0 : 180 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+        style={{ transformStyle: "preserve-3d" }}
+      >
         {/* Body Image - Centered */}
-        <div className="relative flex items-center justify-center transition-all duration-300 ease-in-out">
+        <motion.div 
+          className="relative flex items-center justify-center"
+          style={{ backfaceVisibility: "hidden" }}
+        >
           <img
             src={view === "front" ? bodyFront : bodyBack}
             alt={view === "front" ? "Vista frontal do corpo" : "Vista traseira do corpo"}
-            className="w-[85vw] max-w-[320px] sm:w-[280px] md:w-[320px] h-auto object-contain transition-opacity duration-300"
-            style={{ maxHeight: "600px" }}
+            className="w-[85vw] max-w-[320px] sm:w-[280px] md:w-[320px] h-auto object-contain"
+            style={{ 
+              maxHeight: "600px",
+              transform: view === "back" ? "rotateY(180deg)" : "none"
+            }}
           />
-        </div>
+        </motion.div>
 
         {/* Muscle Labels - Positioned absolutely */}
         <div className="absolute inset-0 pointer-events-none">
@@ -133,7 +145,7 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
