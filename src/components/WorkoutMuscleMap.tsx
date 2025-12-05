@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Settings, Save, Edit2, ArrowLeftRight, Plus, Minus, X, PlusCircle, GitBranch, Type, Slash, Cloud, CloudOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -415,9 +416,14 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
 
         {/* Muscle Labels */}
         <div className="absolute inset-0 pointer-events-none z-20">
-          {labels.map((label) => (
-            <div
+          {labels.map((label, index) => (
+            <motion.div
               key={label.muscle}
+              initial={!isEditing ? { opacity: 0, x: label.side === "left" ? -20 : 20 } : false}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.3 }}
+              whileTap={!isEditing ? { scale: 0.95 } : undefined}
+              whileHover={!isEditing ? { scale: 1.05 } : undefined}
               className={`absolute pointer-events-auto ${
                 !label.left && !label.right ? (label.side === "left" ? "left-0" : "right-0") : ""
               } ${isEditing ? "cursor-move hover:scale-105" : "cursor-pointer"} group ${
@@ -432,21 +438,28 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
               onMouseDown={(e) => isEditing && handleDragStart(e, label.muscle)}
             >
               <div className="space-y-1">
-                <div className={`flex items-center ${label.side === "left" ? "flex-row" : "flex-row-reverse"} gap-1`}>
-                  <div
-                    className={`font-medium px-2 py-1 whitespace-nowrap ${
+                <motion.div 
+                  className={`flex items-center ${label.side === "left" ? "flex-row" : "flex-row-reverse"} gap-1`}
+                  whileTap={!isEditing ? { scale: 1.1, transition: { duration: 0.1 } } : undefined}
+                >
+                  <motion.div
+                    className={`font-medium px-2 py-1 whitespace-nowrap rounded-md ${
                       label.side === "left" ? "text-left" : "text-right"
                     } ${
                       selectedMuscle === label.muscle
-                        ? "font-bold text-primary"
+                        ? "font-bold text-primary bg-primary/10"
                         : "text-foreground group-hover:font-semibold group-hover:text-primary"
                     } ${isEditing && !label.hideLabel ? "bg-accent/20 rounded" : ""} ${
                       editingLabel === label.muscle ? "ring-2 ring-primary animate-pulse bg-primary/10" : ""
                     } transition-all duration-200`}
                     style={{ fontSize: `${label.fontSize || labelSize}px` }}
+                    animate={selectedMuscle === label.muscle ? {
+                      scale: [1, 1.05, 1],
+                      transition: { duration: 0.3 }
+                    } : {}}
                   >
                     {label.name}
-                  </div>
+                  </motion.div>
 
                   {!label.hideLine && (
                     <div className={`relative flex items-center ${
@@ -498,7 +511,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
                       )}
                     </div>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Edit Controls */}
                 {isEditing && editingLabel === label.muscle && (
@@ -656,7 +669,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
                   </Card>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

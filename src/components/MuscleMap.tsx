@@ -1,4 +1,5 @@
 import { MuscleGroup } from "@/pages/Exercises";
+import { motion } from "framer-motion";
 import bodyFront from "@/assets/body-front.png";
 import bodyBack from "@/assets/body-back.png";
 
@@ -6,13 +7,6 @@ interface MuscleMapProps {
   view: "front" | "back";
   selectedMuscle: MuscleGroup | null;
   onMuscleSelect: (muscle: MuscleGroup) => void;
-}
-
-interface MuscleLabel {
-  name: string;
-  muscle: MuscleGroup;
-  side: "left" | "right";
-  top: string;
 }
 
 interface MuscleLabel {
@@ -66,9 +60,14 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
 
         {/* Muscle Labels - Positioned absolutely */}
         <div className="absolute inset-0 pointer-events-none">
-          {labels.map((label) => (
-            <div
+          {labels.map((label, index) => (
+            <motion.div
               key={label.muscle}
+              initial={{ opacity: 0, x: label.side === "left" ? -20 : 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.3 }}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
               className={`absolute pointer-events-auto ${
                 label.side === "left" ? "left-0" : "right-0"
               } cursor-pointer group`}
@@ -76,36 +75,53 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
               onClick={() => onMuscleSelect(label.muscle)}
             >
               {/* Label Container */}
-              <div className={`flex items-center ${label.side === "left" ? "flex-row" : "flex-row-reverse"} gap-1`}>
+              <motion.div 
+                className={`flex items-center ${label.side === "left" ? "flex-row" : "flex-row-reverse"} gap-1`}
+                whileTap={{ 
+                  scale: 1.1,
+                  transition: { duration: 0.1 }
+                }}
+              >
                 {/* Label Text */}
-                <div
-                  className={`text-sm font-medium px-2 py-1 whitespace-nowrap ${
+                <motion.div
+                  className={`text-sm font-medium px-2 py-1 whitespace-nowrap rounded-md ${
                     label.side === "left" ? "text-left" : "text-right"
                   } ${
                     selectedMuscle === label.muscle
-                      ? "font-bold text-primary"
+                      ? "font-bold text-primary bg-primary/10"
                       : "text-foreground group-hover:font-semibold group-hover:text-primary"
                   } transition-all duration-200`}
+                  animate={selectedMuscle === label.muscle ? {
+                    scale: [1, 1.05, 1],
+                    transition: { duration: 0.3 }
+                  } : {}}
                 >
                   {label.name}
-                </div>
+                </motion.div>
 
                 {/* Connector Line and Point */}
                 <div className="relative flex items-center">
-                  <div
+                  <motion.div
                     className={`h-[1px] ${
                       selectedMuscle === label.muscle ? "bg-primary" : "bg-muted-foreground group-hover:bg-primary"
                     } transition-colors duration-200`}
                     style={{ width: `${label.lineWidth || 40}px` }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: index * 0.05 + 0.2, duration: 0.3 }}
                   />
-                  <div
+                  <motion.div
                     className={`w-2 h-2 rounded-full ${
                       selectedMuscle === label.muscle ? "bg-primary" : "bg-muted-foreground group-hover:bg-primary"
                     } transition-colors duration-200`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.05 + 0.3, duration: 0.2 }}
+                    whileTap={{ scale: 1.5 }}
                   />
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           ))}
         </div>
       </div>
