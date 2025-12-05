@@ -2,6 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Settings, Save, Edit2, ArrowLeftRight, Plus, Minus, X, PlusCircle, GitBranch, Type, Slash, Cloud, CloudOff } from "lucide-react";
+
+const triggerHapticFeedback = () => {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+};
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -211,6 +217,8 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
 
   const handleLabelClick = (muscle: string) => {
     if (isEditing) return;
+    
+    triggerHapticFeedback();
     
     // Encontrar o label correspondente
     const label = labels.find(l => l.muscle === muscle);

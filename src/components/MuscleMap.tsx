@@ -3,6 +3,12 @@ import { motion } from "framer-motion";
 import bodyFront from "@/assets/body-front.png";
 import bodyBack from "@/assets/body-back.png";
 
+const triggerHapticFeedback = () => {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+};
+
 interface MuscleMapProps {
   view: "front" | "back";
   selectedMuscle: MuscleGroup | null;
@@ -72,7 +78,10 @@ export function MuscleMap({ view, selectedMuscle, onMuscleSelect }: MuscleMapPro
                 label.side === "left" ? "left-0" : "right-0"
               } cursor-pointer group`}
               style={{ top: label.top }}
-              onClick={() => onMuscleSelect(label.muscle)}
+              onClick={() => {
+                triggerHapticFeedback();
+                onMuscleSelect(label.muscle);
+              }}
             >
               {/* Label Container */}
               <motion.div 
