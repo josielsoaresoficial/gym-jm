@@ -408,19 +408,33 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
       <div
         id="muscle-map-container"
         className="relative w-full max-w-[600px] flex items-center justify-center"
+        style={{ perspective: "1000px" }}
         onMouseMove={handleDragMove}
         onMouseUp={handleDragEnd}
         onMouseLeave={handleDragEnd}
       >
-        {/* Body Image - transparent background adapts to theme */}
-        <div className="relative flex items-center justify-center transition-all duration-300 ease-in-out">
-          <img
-            src={view === "front" ? bodyFrontWorkout : bodyBackWorkout}
-            alt={view === "front" ? "Vista frontal do corpo" : "Vista traseira do corpo"}
-            className="w-[85vw] max-w-[320px] sm:w-[280px] md:w-[320px] h-auto object-contain transition-opacity duration-300"
-            style={{ maxHeight: "600px" }}
-          />
-        </div>
+        <motion.div
+          className="relative w-full flex items-center justify-center"
+          initial={false}
+          animate={{ rotateY: view === "front" ? 0 : 180 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* Body Image - transparent background adapts to theme */}
+          <div 
+            className="relative flex items-center justify-center"
+            style={{ backfaceVisibility: "hidden" }}
+          >
+            <img
+              src={view === "front" ? bodyFrontWorkout : bodyBackWorkout}
+              alt={view === "front" ? "Vista frontal do corpo" : "Vista traseira do corpo"}
+              className="w-[85vw] max-w-[320px] sm:w-[280px] md:w-[320px] h-auto object-contain"
+              style={{ 
+                maxHeight: "600px",
+                transform: view === "back" ? "rotateY(180deg)" : "none"
+              }}
+            />
+          </div>
 
         {/* Muscle Labels */}
         <div className="absolute inset-0 pointer-events-none z-20">
@@ -680,6 +694,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
             </motion.div>
           ))}
         </div>
+        </motion.div>
       </div>
 
       {/* Exercise Modal */}
