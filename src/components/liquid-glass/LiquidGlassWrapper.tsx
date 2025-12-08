@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface RippleProps {
@@ -13,6 +14,7 @@ interface LiquidGlassWrapperProps {
   variant?: "default" | "fitness" | "nutrition" | "highlight";
   hoverable?: boolean;
   onClick?: () => void;
+  animationDelay?: number;
 }
 
 export function LiquidGlassWrapper({
@@ -21,6 +23,7 @@ export function LiquidGlassWrapper({
   variant = "default",
   hoverable = false,
   onClick,
+  animationDelay = 0,
 }: LiquidGlassWrapperProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [ripples, setRipples] = useState<RippleProps[]>([]);
@@ -69,8 +72,17 @@ export function LiquidGlassWrapper({
   };
 
   return (
-    <div
+    <motion.div
       ref={wrapperRef}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.4,
+        delay: animationDelay,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+      whileHover={hoverable ? { scale: 1.02, y: -2 } : undefined}
+      whileTap={hoverable ? { scale: 0.98 } : undefined}
       onClick={handleClick}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
@@ -81,14 +93,17 @@ export function LiquidGlassWrapper({
         "border border-white/20 dark:border-white/10",
         "shadow-xl shadow-black/5 dark:shadow-black/20",
         "font-inter tracking-tight",
-        "transition-all duration-300 ease-out",
-        hoverable && "cursor-pointer hover:scale-[1.02] hover:bg-white/15 dark:hover:bg-white/10",
+        "transition-colors duration-300 ease-out",
+        hoverable && "cursor-pointer hover:bg-white/15 dark:hover:bg-white/10",
         className
       )}
     >
       {/* Iridescent border gradient */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-50"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ duration: 0.6, delay: animationDelay + 0.2 }}
+        className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{
           background: variantGradients[variant],
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
@@ -100,8 +115,12 @@ export function LiquidGlassWrapper({
 
       {/* Shimmer effect on cursor */}
       {isHovered && (
-        <div
-          className="pointer-events-none absolute h-40 w-40 rounded-full opacity-30 transition-opacity duration-300"
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 0.3, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          transition={{ duration: 0.2 }}
+          className="pointer-events-none absolute h-40 w-40 rounded-full"
           style={{
             left: mousePos.x - 80,
             top: mousePos.y - 80,
@@ -113,9 +132,12 @@ export function LiquidGlassWrapper({
 
       {/* Ripple effects */}
       {ripples.map((ripple) => (
-        <span
+        <motion.span
           key={ripple.id}
-          className="pointer-events-none absolute animate-ripple rounded-full bg-white/20"
+          initial={{ scale: 0, opacity: 0.4 }}
+          animate={{ scale: 2, opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="pointer-events-none absolute rounded-full bg-white/20"
           style={{
             left: ripple.x - 60,
             top: ripple.y - 60,
@@ -127,6 +149,6 @@ export function LiquidGlassWrapper({
 
       {/* Content */}
       <div className="relative z-10">{children}</div>
-    </div>
+    </motion.div>
   );
 }
