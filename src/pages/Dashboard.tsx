@@ -268,8 +268,8 @@ const Dashboard = () => {
               </div>
               
               <Link to="/nutrition">
-                <Button variant="nutrition" size="sm" className="w-full text-xs h-8 px-3">
-                  <Plus className="w-3 h-3" />
+                <Button variant="nutrition" size="sm" className="w-full text-[10px] h-7 px-2">
+                  <Plus className="w-2.5 h-2.5" />
                   Adicionar Refeição
                 </Button>
               </Link>
