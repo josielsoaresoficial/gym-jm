@@ -84,7 +84,10 @@ const NutriAI = () => {
           initial={{ scale: 1 }}
           animate={{ 
             scale: isActive ? 1.4 : 1,
-            y: isActive ? -20 : 0
+            y: isActive ? -20 : 0,
+            filter: isActive 
+              ? 'drop-shadow(0 0 12px hsl(var(--primary))) drop-shadow(0 0 24px hsl(var(--primary) / 0.5))' 
+              : 'drop-shadow(0 0 0px transparent)'
           }}
           transition={{ 
             type: "spring", 
