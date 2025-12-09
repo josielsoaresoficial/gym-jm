@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import logger from '@/lib/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -13,24 +14,24 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    console.log('🔧 PWA Install Prompt: Inicializado');
+    logger.log('🔧 PWA Install Prompt: Inicializado');
 
     // Verificar se já foi instalado
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const hasBeenDismissed = localStorage.getItem('pwa-install-dismissed');
     
-    console.log('✅ App instalado?', isStandalone);
-    console.log('❌ Prompt foi dispensado antes?', hasBeenDismissed);
+    logger.log('✅ App instalado?', isStandalone);
+    logger.log('❌ Prompt foi dispensado antes?', hasBeenDismissed);
 
     if (isStandalone) {
-      console.log('⏭️ App já instalado, não mostrando prompt');
+      logger.log('⏭️ App já instalado, não mostrando prompt');
       return;
     }
 
     // Capturar evento de instalação
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      console.log('🎉 Evento beforeinstallprompt capturado!');
+      logger.log('🎉 Evento beforeinstallprompt capturado!');
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
@@ -38,7 +39,7 @@ export function PWAInstallPrompt() {
 
     // Mostrar prompt após 4 segundos
     const timer = setTimeout(() => {
-      console.log('⏰ 4 segundos passados, mostrando prompt...');
+      logger.log('⏰ 4 segundos passados, mostrando prompt...');
       setShowPrompt(true);
     }, 4000);
 
@@ -49,35 +50,35 @@ export function PWAInstallPrompt() {
   }, []);
 
   const handleInstall = async () => {
-    console.log('🎯 Botão de instalação clicado');
+    logger.log('🎯 Botão de instalação clicado');
     
     if (deferredPrompt) {
-      console.log('✨ Tentando instalação automática...');
+      logger.log('✨ Tentando instalação automática...');
       try {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        console.log('📊 Resultado da instalação:', outcome);
+        logger.log('📊 Resultado da instalação:', outcome);
         
         if (outcome === 'accepted') {
-          console.log('✅ Usuário aceitou a instalação');
+          logger.log('✅ Usuário aceitou a instalação');
         }
         setShowPrompt(false);
         localStorage.setItem('pwa-install-dismissed', 'true');
         setDeferredPrompt(null);
       } catch (error) {
-        console.error('❌ Erro na instalação automática:', error);
+        logger.error('❌ Erro na instalação automática:', error);
         setShowPrompt(false);
         localStorage.setItem('pwa-install-dismissed', 'true');
       }
     } else {
-      console.log('⚠️ Instalação automática não disponível neste navegador');
+      logger.log('⚠️ Instalação automática não disponível neste navegador');
       setShowPrompt(false);
       localStorage.setItem('pwa-install-dismissed', 'true');
     }
   };
 
   const handleDismiss = () => {
-    console.log('❌ Usuário dispensou o prompt');
+    logger.log('❌ Usuário dispensou o prompt');
     setShowPrompt(false);
     localStorage.setItem('pwa-install-dismissed', 'true');
   };

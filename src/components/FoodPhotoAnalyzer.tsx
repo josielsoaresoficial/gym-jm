@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Camera, Loader2, Check, Edit2 } from "lucide-react";
+import logger from "@/lib/logger";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/untyped";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,7 +86,7 @@ export const FoodPhotoAnalyzer = () => {
     setAnalysisResult(null);
 
     try {
-      console.log("Enviando imagem para análise...");
+      logger.log("Enviando imagem para análise...");
       
       const { data, error } = await supabase.functions.invoke('analyze-food', {
         body: { imageBase64 }
@@ -108,7 +109,7 @@ export const FoodPhotoAnalyzer = () => {
         return;
       }
 
-      console.log("Resultado da análise:", data);
+      logger.log("Resultado da análise:", data);
       
       if (data.status === 'sucesso') {
         setAnalysisResult(data);
@@ -120,7 +121,7 @@ export const FoodPhotoAnalyzer = () => {
       }
 
     } catch (error: any) {
-      console.error('Erro ao analisar imagem:', error);
+      logger.error('Erro ao analisar imagem:', error);
       
       // Verificar se há mensagem específica no erro
       const errorMessage = error?.message || "Erro ao analisar imagem. Tente novamente.";
@@ -232,7 +233,7 @@ export const FoodPhotoAnalyzer = () => {
       setSelectedImage(null);
       setAnalysisResult(null);
     } catch (error) {
-      console.error('Erro ao salvar refeição:', error);
+      logger.error('Erro ao salvar refeição:', error);
       toast.error("Erro ao salvar refeição");
     }
   };
