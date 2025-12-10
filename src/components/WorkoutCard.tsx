@@ -110,13 +110,43 @@ export function WorkoutCard({
     return labels[level] || level;
   };
 
-  const getCategoryImage = (cat: string) => {
+  const getCategoryImage = (cat: string, workoutName: string) => {
+    const nameLower = workoutName.toLowerCase();
+    
+    // Primeiro, verificar por palavras-chave no nome do treino
+    if (nameLower.includes('peitoral') || nameLower.includes('peito') || nameLower.includes('chest')) {
+      return workoutChestLegs;
+    }
+    if (nameLower.includes('costas') || nameLower.includes('dorsal')) {
+      return workoutBack;
+    }
+    if (nameLower.includes('abdômen') || nameLower.includes('abdomen') || nameLower.includes('core') || nameLower.includes('abs')) {
+      return workoutAbsDefined;
+    }
+    if (nameLower.includes('glúteos') || nameLower.includes('gluteos') || nameLower.includes('bumbum')) {
+      return workoutLegsGlutes;
+    }
+    if (nameLower.includes('bíceps') || nameLower.includes('biceps') || nameLower.includes('tríceps') || nameLower.includes('triceps') || nameLower.includes('braço') || nameLower.includes('braco')) {
+      return workoutArmsAbs;
+    }
+    if (nameLower.includes('pernas') || nameLower.includes('quadríceps') || nameLower.includes('quadriceps') || nameLower.includes('panturrilha')) {
+      return workoutLegsFemale;
+    }
+    if (nameLower.includes('ombro') || nameLower.includes('deltóide') || nameLower.includes('deltoide')) {
+      return workoutFreeweights;
+    }
+    if (nameLower.includes('cardio') || nameLower.includes('hiit') || nameLower.includes('aeróbico') || nameLower.includes('aerobico')) {
+      return workoutCardio;
+    }
+    
+    // Fallback por categoria
     const images: Record<string, string> = {
       "7_minute": workoutCardio,
+      "7min": workoutCardio,
       full_body: workoutFreeweights,
       abs: workoutAbsDefined,
       hiit: workoutCardio,
-      strength: workoutFreeweights,
+      strength: workoutChestLegs,
       legs: workoutLegsGlutes,
       back: workoutBack,
       cardio: workoutCardio,
@@ -213,7 +243,7 @@ export function WorkoutCard({
         {/* Imagem de fundo */}
         <div className="absolute inset-0">
           <img 
-            src={getCategoryImage(category)} 
+            src={getCategoryImage(category, name)} 
             alt={name}
             className="w-full h-full object-cover object-center"
           />
