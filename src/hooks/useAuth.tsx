@@ -36,26 +36,6 @@ export function useAuth() {
 
   const updateProfileFromOAuth = async (user: User) => {
     try {
-      const { data: existingProfile } = await supabase
-        .from('profiles' as any)
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const profileData = existingProfile as any;
-      
-      // Se perfil existe e onboarding está completo, apenas atualizar avatar
-      if (profileData?.onboarding_completed) {
-        const newAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-        if (newAvatar && newAvatar !== profileData.avatar_url) {
-          await supabase
-            .from('profiles' as any)
-            .update({ avatar_url: newAvatar } as any)
-            .eq('user_id', user.id);
-        }
-        return;
-      }
-
       // Extrair nome do metadata ou email
       let userName = user.user_metadata?.full_name || user.user_metadata?.name || '';
       
@@ -64,22 +44,21 @@ export function useAuth() {
         userName = user.email.split('@')[0];
       }
 
-      const profilePayload = {
-        user_id: user.id,
-        name: userName || 'Usuário',
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        onboarding_completed: false,
-      };
+      // Usar upsert para evitar race condition e duplicate key errors
+      const { error } = await supabase
+        .from('profiles' as any)
+        .upsert({
+          user_id: user.id,
+          name: userName || 'Usuário',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+          onboarding_completed: false,
+        } as any, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
 
-      if (existingProfile) {
-        await supabase
-          .from('profiles' as any)
-          .update(profilePayload as any)
-          .eq('user_id', user.id);
-      } else {
-        await supabase
-          .from('profiles' as any)
-          .insert(profilePayload as any);
+      if (error && import.meta.env.DEV) {
+        console.error('Erro ao atualizar perfil:', error);
       }
     } catch (error) {
       if (import.meta.env.DEV) {
