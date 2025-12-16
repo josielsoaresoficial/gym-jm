@@ -6,7 +6,7 @@ import AnimatedExercise from '@/components/AnimatedExercise';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untyped";
 import EditExerciseDialog from '@/components/EditExerciseDialog';
 
 const ExerciseDetail = () => {

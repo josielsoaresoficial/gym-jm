@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/untyped';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';

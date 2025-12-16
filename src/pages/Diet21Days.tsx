@@ -8,7 +8,7 @@ import { DietDayTips } from "@/components/DietDayTips";
 import { ArrowLeft, ArrowRight, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untyped";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

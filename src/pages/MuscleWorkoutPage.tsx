@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Play, Dumbbell } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untyped";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Exercise {
