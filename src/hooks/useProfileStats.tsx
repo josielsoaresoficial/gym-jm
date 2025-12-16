@@ -1,6 +1,6 @@
 import { useAuth } from "./useAuth";
 import { useOptimizedQuery } from "./useOptimizedQuery";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untyped";
 
 export const useProfileStats = () => {
   const { user } = useAuth();
