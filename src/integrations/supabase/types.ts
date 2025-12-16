@@ -785,10 +785,14 @@ export type Database = {
           daily_protein_goal: number | null
           fitness_goal: string | null
           gender: string | null
+          goal_weight: number | null
           height: number | null
           id: string
+          is_premium: boolean | null
           name: string | null
           onboarding_completed: boolean | null
+          trial_expired: boolean | null
+          trial_started_at: string | null
           updated_at: string | null
           user_id: string
           weight: number | null
@@ -804,10 +808,14 @@ export type Database = {
           daily_protein_goal?: number | null
           fitness_goal?: string | null
           gender?: string | null
+          goal_weight?: number | null
           height?: number | null
           id?: string
+          is_premium?: boolean | null
           name?: string | null
           onboarding_completed?: boolean | null
+          trial_expired?: boolean | null
+          trial_started_at?: string | null
           updated_at?: string | null
           user_id: string
           weight?: number | null
@@ -823,10 +831,14 @@ export type Database = {
           daily_protein_goal?: number | null
           fitness_goal?: string | null
           gender?: string | null
+          goal_weight?: number | null
           height?: number | null
           id?: string
+          is_premium?: boolean | null
           name?: string | null
           onboarding_completed?: boolean | null
+          trial_expired?: boolean | null
+          trial_started_at?: string | null
           updated_at?: string | null
           user_id?: string
           weight?: number | null
